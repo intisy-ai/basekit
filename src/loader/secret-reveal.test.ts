@@ -9,6 +9,14 @@ import { PLUGINS_DIR } from "./env.js";
 import { S } from "./state.js";
 import { handleConfigInputData, handlePluginKey, handleSettingsKey } from "./input.js";
 import { buildPlugins } from "./views/plugins.js";
+import { pluginRow } from "./__tests__/fixtures.js";
+import type { SettingsItem, SettingsRow } from "./settings-model.js";
+
+function settingAt(index: number): SettingsItem {
+  const row = S.configItems[index];
+  if (!row || row.kind === "action") throw new Error(`config row ${index} is not a setting`);
+  return row;
+}
 
 const STRIP = /\x1b\[[0-9;]*m/g;
 
@@ -20,7 +28,7 @@ function boolRow() {
   return { key: "flag", value: true, def: true, isSet: true, type: "boolean" };
 }
 
-function openPluginEditor(rows: unknown[], bundle = "/does-not-exist.js") {
+function openPluginEditor(rows: SettingsRow[], bundle = "/does-not-exist.js") {
   S.page = "plugins";
   S.mode = "pconfig";
   S.hasUpdater = true;   // bypasses the "install the updater first" gate buildPlugins renders otherwise
@@ -63,7 +71,7 @@ describe("a secret field that also declares options", () => {
 
     expect(S.mode).toBe("pcfginput");
     expect(S.inputBuf).toBe("");
-    expect(S.configItems[0].value).toBe("s3cr3t");
+    expect(settingAt(0).value).toBe("s3cr3t");
   });
 });
 
@@ -177,7 +185,7 @@ describe("the reveal's lifetime", () => {
 
       expect(S.mode).toBe("pconfig");
       expect(S.cfgReveal).toBe("");
-      expect(S.configItems[0].value).toBe("freshly-typed");
+      expect(settingAt(0).value).toBe("freshly-typed");
       const body = renderPluginBody();
       const row = body.find((line) => line.includes("token"));
       expect(row).toBeDefined();
@@ -259,7 +267,7 @@ describe("a declared boolean whose stored value drifted from its declaration", (
 
       handlePluginKey("enter");
 
-      expect(S.configItems[0].value).toBe(true);
+      expect(settingAt(0).value).toBe(true);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -361,7 +369,7 @@ describe("a revealed secret does not survive switching to a different plugin's e
     await readDeclaration("alpha");
     await readDeclaration("beta");
 
-    S.pluginItems = [{ name: "alpha", enabled: true }, { name: "beta", enabled: true }];
+    S.pluginItems = [pluginRow({ name: "alpha" }), pluginRow({ name: "beta" })];
     S.pcursor = 0;
     S.mode = "pactions";
     S.pacursor = getPluginActions(S.pluginItems[0]).findIndex((action: { key: string }) => action.key === "configure");
@@ -369,7 +377,7 @@ describe("a revealed secret does not survive switching to a different plugin's e
 
     handlePluginKey("enter");
     expect(S.configTarget?.plugin).toBe("alpha");
-    expect(S.configItems[0].type).toBe("secret");
+    expect(settingAt(0).type).toBe("secret");
     handlePluginKey("r");
     expect(S.cfgReveal).toBe("token");
 
@@ -386,7 +394,7 @@ describe("a revealed secret does not survive switching to a different plugin's e
     handlePluginKey("enter");
 
     expect(S.configTarget?.plugin).toBe("beta");
-    expect(S.configItems[0].type).toBe("secret");
+    expect(settingAt(0).type).toBe("secret");
     expect(S.cfgReveal).toBe("");
   });
 });

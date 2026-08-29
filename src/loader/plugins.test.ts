@@ -15,12 +15,13 @@ import {
   readDeclaration,
   settingsPluginIds,
 } from "./plugins.js";
+import { pluginRow } from "./__tests__/fixtures.js";
 
-const values = { defaults: { token: "" }, current: { token: "abc" } };
+const values = { name: "p", defaults: { token: "" }, current: { token: "abc" } };
 
 describe("declarationOf", () => {
   it("is null for a plugin that declares no settings and no actions", () => {
-    expect(declarationOf("p", "/bundle.js", {}, { defaults: {}, current: {} })).toBeNull();
+    expect(declarationOf("p", "/bundle.js", {}, { name: "p", defaults: {}, current: {} })).toBeNull();
   });
 
   it("types a row by the plugin's declaration when it made one, so a secret can be masked", () => {
@@ -29,7 +30,7 @@ describe("declarationOf", () => {
   });
 
   it("falls back to the value's own type for a key the plugin declared no field for", () => {
-    const declaration = declarationOf("p", "/bundle.js", {}, { defaults: { retries: 3 }, current: {} });
+    const declaration = declarationOf("p", "/bundle.js", {}, { name: "p", defaults: { retries: 3 }, current: {} });
     expect(declaration!.items).toEqual([{ key: "retries", value: 3, def: 3, isSet: false, type: "number" }]);
   });
 
@@ -38,7 +39,7 @@ describe("declarationOf", () => {
       actions: [{ id: "sync", label: "Sync now" }],
       sections: [{ id: "s", label: "S", actions: ["sync"] }],
     };
-    const declaration = declarationOf("p", "/bundle.js", schema, { defaults: {}, current: {} });
+    const declaration = declarationOf("p", "/bundle.js", schema, { name: "p", defaults: {}, current: {} });
     expect(declaration!.actions).toEqual([{ id: "sync", label: "Sync now" }]);
     expect(declaration!.sections).toEqual([{ id: "s", label: "S", actions: ["sync"] }]);
   });
@@ -59,8 +60,8 @@ describe("declarationOf", () => {
 
 describe("hostPluginId", () => {
   it("derives the host's id from the deployed file, which is not always the entry's name", () => {
-    expect(hostPluginId({ name: "demo" })).toBe("demo");
-    expect(hostPluginId({ name: "listed-as", pluginFile: "deployed-as.js" })).toBe("deployed-as");
+    expect(hostPluginId(pluginRow({ name: "demo" }))).toBe("demo");
+    expect(hostPluginId(pluginRow({ name: "listed-as", pluginFile: "deployed-as.js" }))).toBe("deployed-as");
   });
 });
 
@@ -147,9 +148,9 @@ describe("a declaration whose lists are not lists", () => {
     });
 
     const declaration = await readDeclaration("sloppy");
-    expect(() => splitBySections(declaration)).not.toThrow();
+    expect(() => splitBySections(declaration!)).not.toThrow();
     // Its section claimed nothing resolvable, so the action stays in the plugin's own group.
-    expect(splitBySections(declaration).map((section: { label: string }) => section.label)).toEqual(["sloppy"]);
+    expect(splitBySections(declaration!).map((section: { label: string }) => section.label)).toEqual(["sloppy"]);
   });
 });
 
@@ -159,12 +160,12 @@ describe("the diagnostics action", () => {
   it("is offered wherever the host recorded a row, and never for a plugin it never loads", async () => {
     await hostWith({ id: "seen", capabilities: [], module: silentPlugin });
 
-    expect(keysOf(getPluginActions({ type: "npm", name: "seen" }))).toEqual(["diagnostics", "update-npm", "uninstall-npm", "cancel"]);
-    expect(keysOf(getPluginActions({ name: "seen", enabled: false }))).toEqual(["enable-plugin", "diagnostics", "cancel"]);
-    expect(keysOf(getPluginActions({ name: "seen", enabled: true }))).toContain("diagnostics");
+    expect(keysOf(getPluginActions(pluginRow({ type: "npm", name: "seen" })))).toEqual(["diagnostics", "update-npm", "uninstall-npm", "cancel"]);
+    expect(keysOf(getPluginActions(pluginRow({ name: "seen", enabled: false })))).toEqual(["enable-plugin", "diagnostics", "cancel"]);
+    expect(keysOf(getPluginActions(pluginRow({ name: "seen", enabled: true })))).toContain("diagnostics");
     // The host never loads a plugin the app itself manages, so there is never a row to show.
-    expect(keysOf(getPluginActions({ foreign: true, name: "seen", enabled: true }))).not.toContain("diagnostics");
-    expect(keysOf(getPluginActions({ name: "stranger", enabled: false }))).toEqual(["enable-plugin", "cancel"]);
+    expect(keysOf(getPluginActions(pluginRow({ foreign: true, name: "seen", enabled: true })))).not.toContain("diagnostics");
+    expect(keysOf(getPluginActions(pluginRow({ name: "stranger", enabled: false })))).toEqual(["enable-plugin", "cancel"]);
   });
 });
 
@@ -221,13 +222,13 @@ describe("probeConfigValuesAsync against a real bundle", () => {
     expect(declaration!.items.find((row: { key: string }) => row.key === "port")).toEqual({ key: "port", value: 4000, def: 3000, isSet: true, type: "number" });
     expect(declaration!.configName).toBe("gated-config");
 
-    const listedByItsOwnName = getPluginActions({ type: "npm", name: "gated" });
+    const listedByItsOwnName = getPluginActions(pluginRow({ type: "npm", name: "gated" }));
     expect(listedByItsOwnName.map((action: { key: string }) => action.key)).toEqual(["configure", "diagnostics", "update-npm", "uninstall-npm", "cancel"]);
     expect(listedByItsOwnName[0].label).toBe("Configure settings (2)");
 
-    const deployedUnderAnotherName = getPluginActions({ type: "npm", name: "listed-as", pluginFile: "gated.js" });
+    const deployedUnderAnotherName = getPluginActions(pluginRow({ type: "npm", name: "listed-as", pluginFile: "gated.js" }));
     expect(deployedUnderAnotherName.map((action: { key: string }) => action.key)).toEqual(["configure", "diagnostics", "update-npm", "uninstall-npm", "cancel"]);
 
-    expect(getPluginActions({ type: "npm", name: "stranger" }).map((action: { key: string }) => action.key)).toEqual(["update-npm", "uninstall-npm", "cancel"]);
+    expect(getPluginActions(pluginRow({ type: "npm", name: "stranger" })).map((action: { key: string }) => action.key)).toEqual(["update-npm", "uninstall-npm", "cancel"]);
   });
 });
