@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { accountControllerFromManager, refreshAccountToken, verifyAllAccounts } from "./controller.js";
 import type { CoreAccount } from "./types.js";
+import { coreAccount } from "./__tests__/fixtures.js";
 
 function fakeManager(accounts: CoreAccount[]) {
   return {
@@ -18,10 +19,10 @@ describe("accountControllerFromManager", () => {
     const now = 1000;
     vi.spyOn(Date, "now").mockReturnValue(now);
     const accounts = [
-      { id: "a", enabled: false },
-      { id: "b", enabled: true, coolingDownUntil: now + 1 },
-      { id: "c", enabled: true, rateLimitResetTimes: { lane1: now + 1 } },
-      { id: "d", enabled: true },
+      coreAccount({ id: "a", enabled: false }),
+      coreAccount({ id: "b", enabled: true, coolingDownUntil: now + 1 }),
+      coreAccount({ id: "c", enabled: true, rateLimitResetTimes: { lane1: now + 1 } }),
+      coreAccount({ id: "d", enabled: true }),
     ];
     const controller = accountControllerFromManager(fakeManager(accounts), {});
     const statuses = controller.list().map((v) => v.status);
@@ -59,8 +60,8 @@ describe("refreshAccountToken", () => {
 describe("verifyAllAccounts", () => {
   it("skips disabled accounts and calls the injected verify for enabled ones, then prints Done", async () => {
     const accounts = [
-      { id: "a", email: "a@x.com", enabled: false },
-      { id: "b", email: "b@x.com", enabled: true },
+      coreAccount({ id: "a", email: "a@x.com", enabled: false }),
+      coreAccount({ id: "b", email: "b@x.com", enabled: true }),
     ];
     const manager = fakeManager(accounts);
     const verify = vi.fn().mockResolvedValue(undefined);
