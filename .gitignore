@@ -1,0 +1,24 @@
+site/
+node_modules/
+dist/
+*.log
+docs/
+.superpowers/
+graphify-out/
+.idea/
+
+**/build/
+.gradle/
+**/.gradle/
+*.iml
+
+# Generated on the default branch by the release readme job.
+README.md
+
+# TeaVM build output; the committed source is the .d.ts beside it.
+src/generated/core.teavm.js
+src/generated/runtime.js
+src/generated/runtime.manifest.json
+src/ir/generated/core-ir.teavm.js
+src/auth/generated/core-auth.teavm.js
+src/proxy/generated/core-proxy.teavm.js

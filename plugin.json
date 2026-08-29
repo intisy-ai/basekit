@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/@intisy-ai/api/schema/plugin.schema.json",
+  "id": "basekit",
+  "api": 1,
+  "publish": {
+    "scopedOnly": true,
+    "jarModule": [
+      "contracts",
+      "ir",
+      "js-base",
+      "accounts",
+      "auth-contracts",
+      "routing",
+      "proxy-contracts"
+    ]
+  },
+  "repo": {
+    "role": "Shared config, canonical-IR, account, routing and loader foundation",
+    "category": "core-library",
+    "tech": [
+      "typescript",
+      "java",
+      "teavm"
+    ]
+  }
+}

@@ -1,0 +1,181 @@
+// Shared test-kit for the ecosystem. NOT part of the runtime barrel (index.ts);
+// it is imported only by test files (`import { runPluginContract } from "./testing.js"`),
+// so it never bloats a plugin's shipped bundle. It encodes the universal contract
+// every plugin gets from core: a `/<plugin>-config` CLI that round-trips, command
+// deployment, and clean action invocations, all in fully isolated temp homes so a
+// test can never touch the real ~/.claude or ~/.config/opencode.
+
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { applyManifestDeclarations, commandsFor } from "./plugin-declarations.js";
+import { runConfigCli } from "./configcli.js";
+import { getConfigValue } from "./config.js";
+
+/** The repo's own manifest, or null when it has none. */
+function readManifest(cwd = process.cwd()) {
+  try { return JSON.parse(readFileSync(join(cwd, "plugin.json"), "utf8")); } catch { return null; }
+}
+
+const PROBE = "__contract_probe__";
+
+/** Temporary app homes a test runs against, so it never touches the real ones. */
+export interface IsolatedHomes {
+  opencode: string;
+  claude: string;
+  cleanup: () => void;
+}
+
+// Two throwaway config homes + the env that points every core path resolver at
+// them. Mutates process.env (so in-process deploy fns see it too) and restores on
+// cleanup. Each test FILE runs in its own vitest worker, so this never races.
+/**
+ * Points this process at temporary app homes for the duration of a test.
+ *
+ * @returns the temporary homes and the function that restores the real ones.
+ */
+export function withIsolatedHomes(): IsolatedHomes {
+  const opencode = mkdtempSync(join(tmpdir(), "agentbox-oc-"));
+  const claude = mkdtempSync(join(tmpdir(), "agentbox-cc-"));
+  const appsFile = join(mkdtempSync(join(tmpdir(), "agentbox-apps-")), "apps.json");
+  const saved = {
+    CORE_APP: process.env.CORE_APP,
+    HUB_OPENCODE_DIR: process.env.HUB_OPENCODE_DIR,
+    HUB_CLAUDE_DIR: process.env.HUB_CLAUDE_DIR,
+    HUB_APPS_FILE: process.env.HUB_APPS_FILE,
+  };
+  process.env.CORE_APP = "opencode";
+  process.env.HUB_OPENCODE_DIR = opencode;
+  process.env.HUB_CLAUDE_DIR = claude;
+  // The app registry is data-driven now, so seed the two apps the contract kit
+  // exercises; their homes still resolve from HUB_OPENCODE_DIR / HUB_CLAUDE_DIR.
+  process.env.HUB_APPS_FILE = appsFile;
+  writeFileSync(appsFile, JSON.stringify({
+    opencode: {
+      id: "opencode", label: "OpenCode",
+      home: { envOverride: "HUB_OPENCODE_DIR", nativeEnv: "OPENCODE_CONFIG_DIR", xdgSubdir: "opencode", candidates: ["~/.config/opencode", "~/.opencode"] },
+      detect: { binary: "opencode", pkg: "opencode-ai" }, commandsSubdir: "command", proxyPort: 34568, integration: "native", wireFormat: "anthropic",
+    },
+    claude: {
+      id: "claude", label: "Claude Code",
+      home: { envOverride: "HUB_CLAUDE_DIR", nativeEnv: "CLAUDE_CONFIG_DIR", candidates: ["~/.claude", "~/.config/claude"] },
+      detect: { binary: "claude", pkg: "@anthropic-ai/claude-code" }, commandsSubdir: "commands", proxyPort: 34567, integration: "env-baseurl", wireFormat: "anthropic",
+    },
+  }));
+  return {
+    opencode,
+    claude,
+    cleanup() {
+      for (const [k, v] of Object.entries(saved)) v === undefined ? delete process.env[k] : (process.env[k] = v);
+      try { rmSync(opencode, { recursive: true, force: true }); } catch { /* ignore */ }
+      try { rmSync(claude, { recursive: true, force: true }); } catch { /* ignore */ }
+      try { rmSync(appsFile, { recursive: true, force: true }); } catch { /* ignore */ }
+    },
+  };
+}
+
+function runNode(args: string[]): string {
+  return execFileSync("node", args, { env: process.env, encoding: "utf8" });
+}
+
+/** What one plugin tells the shared contract test about itself. */
+export interface PluginContractSpec {
+  name: string;                 // describe() label
+  entry: string;                // bundle run as `node <entry> config …` (the config CLI + load)
+  configName: string;           // config/<configName>.json the CLI writes
+  app?: "opencode" | "claude" | "both";  // which command dir(s) to expect (default "both")
+  commands?: string[];          // slash-command names (no .md) that must deploy
+  deploy?: "load" | { module: string; fn: string; arg?: "opencode" | "claude" | "none" };
+  actions?: string[][];         // extra argv arrays run against entry; each must exit 0
+  readme?: boolean;             // when true, asserts `node <entry> readme --check` exits 0
+}
+
+function commandDirs(app: string, homes: IsolatedHomes): Array<[string, string]> {
+  if (app === "opencode") return [[homes.opencode, "command"]];
+  if (app === "claude") return [[homes.claude, "commands"]];
+  return [[homes.opencode, "command"], [homes.claude, "commands"]];
+}
+
+// Register the universal contract for one plugin. The config round-trip is the
+// rock-solid common denominator (every plugin has it via core); command
+// deployment + actions are asserted when the spec declares them.
+/**
+ * Registers the tests asserting the behaviours every plugin gets from this library.
+ *
+ * @param spec what the plugin under test declares.
+ */
+export function runPluginContract(spec: PluginContractSpec): void {
+  const app = spec.app ?? "both";
+  describe(`${spec.name}: core contract`, () => {
+    let homes: IsolatedHomes;
+    beforeAll(() => { homes = withIsolatedHomes(); });
+    afterAll(() => homes?.cleanup());
+
+    it("config set/get/list round-trips to config/" + spec.configName + ".json", () => {
+      const manifest = readManifest();
+      // A plugin that DECLARES its settings does not serve them: the host registers them from the
+      // manifest and edits them itself, so the round-trip is asserted where it now happens.
+      if (manifest?.config?.defaults) {
+        applyManifestDeclarations([manifest], homes.opencode);
+        // The isolated homes put CORE_APP and HUB_OPENCODE_DIR in front of every resolver, so this
+        // edits the temp home rather than a real one.
+        runConfigCli(spec.configName, ["set", PROBE, "hello world"]);
+        expect(getConfigValue(spec.configName, PROBE, homes.opencode)).toBe("hello world");
+      } else {
+        runNode([spec.entry, "config", "set", PROBE, "hello world"]);
+        expect(runNode([spec.entry, "config", "get", PROBE])).toContain('"hello world"');
+        expect(runNode([spec.entry, "config", "list"])).toContain(PROBE);
+      }
+      const file = join(homes.opencode, "config", `${spec.configName}.json`);
+      expect(existsSync(file)).toBe(true);
+      expect(JSON.parse(readFileSync(file, "utf8"))[PROBE]).toBe("hello world");
+    });
+
+    if (spec.commands?.length) {
+      it("gets its slash-commands into every app", async () => {
+        const manifest = readManifest();
+        // A plugin that DECLARES its commands does not deploy them; the host does, from the
+        // manifest, so that they exist for a plugin that has never been activated.
+        if (Array.isArray(manifest?.commands) && manifest.commands.length) {
+          const declared = commandsFor(manifest).map((command) => command.name);
+          for (const c of spec.commands!) expect(declared).toContain(c);
+          applyManifestDeclarations([manifest], homes.opencode);
+          applyManifestDeclarations([manifest], homes.claude);
+          for (const [dir, sub] of commandDirs(app, homes)) {
+            const present = existsSync(join(dir, sub)) ? readdirSync(join(dir, sub)) : [];
+            for (const c of spec.commands!) expect(present).toContain(`${c}.md`);
+          }
+          return;
+        }
+        const deploy = spec.deploy ?? "load";
+        if (deploy === "load") {
+          runNode([spec.entry]); // normal load triggers deployCommands
+        } else {
+          const mod = await import(pathToFileURL(resolve(deploy.module)).href);
+          const arg = deploy.arg === "claude" ? homes.claude : deploy.arg === "opencode" ? homes.opencode : undefined;
+          await mod[deploy.fn](arg);
+        }
+        for (const [dir, sub] of commandDirs(app, homes)) {
+          const present = existsSync(join(dir, sub)) ? readdirSync(join(dir, sub)) : [];
+          for (const c of spec.commands!) expect(present).toContain(`${c}.md`);
+        }
+      });
+    }
+
+    for (const argv of spec.actions ?? []) {
+      it(`runs \`${argv.join(" ")}\` cleanly`, () => {
+        expect(() => runNode([spec.entry, ...argv])).not.toThrow();
+      });
+    }
+
+    if (spec.readme) {
+      it("README.md is up to date (readme --check)", () => {
+        // runNode throws on non-zero exit; a fresh generated README must match the committed one
+        expect(() => runNode([spec.entry, "readme", "--check"])).not.toThrow();
+      });
+    }
+  });
+}
