@@ -71,30 +71,30 @@ function fakeInstaller(): StoreInstaller & { calls: string[] } {
 
 describe("declaredLibraries", () => {
   it("reads the scoped dependencies a clone's package.json declares", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "^1.1.0", "@intisy-ai/api": "^1.0.2" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0", "@intisy-ai/api": "^1.0.2" });
     expect(declaredLibraries(sourceDir)).toEqual([
-      { specifier: "@intisy-ai/core", range: "^1.1.0" },
+      { specifier: "@intisy-ai/basekit", range: "^1.1.0" },
       { specifier: "@intisy-ai/api", range: "^1.0.2" },
     ]);
   });
 
   it("ignores a dependency outside the ecosystem scope", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "^1.1.0", vitest: "^3.0.0", esbuild: "^0.25.0" });
-    expect(declaredLibraries(sourceDir).map((library) => library.specifier)).toEqual(["@intisy-ai/core"]);
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0", vitest: "^3.0.0", esbuild: "^0.25.0" });
+    expect(declaredLibraries(sourceDir).map((library) => library.specifier)).toEqual(["@intisy-ai/basekit"]);
   });
 
   it("includes a peer dependency, which a consumer still has to resolve", () => {
-    const sourceDir = makeClone({}, { "@intisy-ai/core-auth": "^1.1.0" });
-    expect(declaredLibraries(sourceDir)).toEqual([{ specifier: "@intisy-ai/core-auth", range: "^1.1.0" }]);
+    const sourceDir = makeClone({}, { "@intisy-ai/anthropic-translator": "^1.1.0" });
+    expect(declaredLibraries(sourceDir)).toEqual([{ specifier: "@intisy-ai/anthropic-translator", range: "^1.1.0" }]);
   });
 
   it("prefers the dependencies entry when a library is in both groups", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "^1.1.0" }, { "@intisy-ai/core": "^1.0.0" });
-    expect(declaredLibraries(sourceDir)).toEqual([{ specifier: "@intisy-ai/core", range: "^1.1.0" }]);
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0" }, { "@intisy-ai/basekit": "^1.0.0" });
+    expect(declaredLibraries(sourceDir)).toEqual([{ specifier: "@intisy-ai/basekit", range: "^1.1.0" }]);
   });
 
   it("skips a file: spec, which describes a path in the clone and cannot describe a home install", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "file:core", "@intisy-ai/api": "^1.0.2" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "file:basekit", "@intisy-ai/api": "^1.0.2" });
     expect(declaredLibraries(sourceDir).map((library) => library.specifier)).toEqual(["@intisy-ai/api"]);
   });
 
@@ -149,31 +149,31 @@ describe("mergeRange", () => {
 
 describe("materializeLibraries", () => {
   it("writes the home manifest and installs what the clone declares", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "^1.1.0" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0" });
     const home = homeFor(sourceDir);
     const install = fakeInstaller();
 
     const results = materializeLibraries(sourceDir, home, () => {}, install);
 
     expect(install.calls).toEqual([home]);
-    expect(results).toEqual([{ specifier: "@intisy-ai/core", status: "installed", detail: "^1.1.0" }]);
+    expect(results).toEqual([{ specifier: "@intisy-ai/basekit", status: "installed", detail: "^1.1.0" }]);
     const manifest = JSON.parse(readFileSync(join(home, "package.json"), "utf8")) as {
       private: boolean;
       dependencies: Record<string, string>;
     };
     expect(manifest.private).toBe(true);
-    expect(manifest.dependencies).toEqual({ "@intisy-ai/core": "^1.1.0" });
+    expect(manifest.dependencies).toEqual({ "@intisy-ai/basekit": "^1.1.0" });
   });
 
   it("puts the library where Node resolves it from a deployed bundle", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "^1.1.0" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0" });
     const home = homeFor(sourceDir);
     materializeLibraries(sourceDir, home, () => {}, fakeInstaller());
-    expect(existsSync(join(home, "node_modules", "@intisy-ai", "core", "package.json"))).toBe(true);
+    expect(existsSync(join(home, "node_modules", "@intisy-ai", "basekit", "package.json"))).toBe(true);
   });
 
   it("does not install again when the manifest already asks for these ranges and they are present", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "^1.1.0" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0" });
     const home = homeFor(sourceDir);
     const install = fakeInstaller();
 
@@ -181,11 +181,11 @@ describe("materializeLibraries", () => {
     const results = materializeLibraries(sourceDir, home, () => {}, install);
 
     expect(install.calls).toHaveLength(1);
-    expect(results).toEqual([{ specifier: "@intisy-ai/core", status: "current", detail: "^1.1.0" }]);
+    expect(results).toEqual([{ specifier: "@intisy-ai/basekit", status: "current", detail: "^1.1.0" }]);
   });
 
   it("installs again when the manifest is satisfied but the store was emptied", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "^1.1.0" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0" });
     const home = homeFor(sourceDir);
     const install = fakeInstaller();
 
@@ -197,29 +197,29 @@ describe("materializeLibraries", () => {
   });
 
   it("keeps a second clone from downgrading a slot the first brought forward", () => {
-    const ahead = makeClone({ "@intisy-ai/core": "^1.1.0" });
+    const ahead = makeClone({ "@intisy-ai/basekit": "^1.1.0" });
     const home = homeFor(ahead);
     const install = fakeInstaller();
     materializeLibraries(ahead, home, () => {}, install);
 
     const behind = join(ahead, "..", "behind");
     mkdirSync(behind, { recursive: true });
-    writeFileSync(join(behind, "package.json"), JSON.stringify({ name: "behind", dependencies: { "@intisy-ai/core": "^1.0.0" } }));
+    writeFileSync(join(behind, "package.json"), JSON.stringify({ name: "behind", dependencies: { "@intisy-ai/basekit": "^1.0.0" } }));
     materializeLibraries(behind, home, () => {}, install);
 
     const manifest = JSON.parse(readFileSync(join(home, "package.json"), "utf8")) as { dependencies: Record<string, string> };
-    expect(manifest.dependencies["@intisy-ai/core"]).toBe("^1.1.0");
+    expect(manifest.dependencies["@intisy-ai/basekit"]).toBe("^1.1.0");
   });
 
   it("reports a cross-major disagreement between two clones rather than hiding it", () => {
-    const first = makeClone({ "@intisy-ai/core": "^1.1.0" });
+    const first = makeClone({ "@intisy-ai/basekit": "^1.1.0" });
     const home = homeFor(first);
     const install = fakeInstaller();
     materializeLibraries(first, home, () => {}, install);
 
     const second = join(first, "..", "second");
     mkdirSync(second, { recursive: true });
-    writeFileSync(join(second, "package.json"), JSON.stringify({ name: "second", dependencies: { "@intisy-ai/core": "^2.0.0" } }));
+    writeFileSync(join(second, "package.json"), JSON.stringify({ name: "second", dependencies: { "@intisy-ai/basekit": "^2.0.0" } }));
 
     const logged: string[] = [];
     const results = materializeLibraries(second, home, (message) => logged.push(message), install);
@@ -229,22 +229,22 @@ describe("materializeLibraries", () => {
   });
 
   it("accumulates a second clone's different library beside the first's", () => {
-    const first = makeClone({ "@intisy-ai/core": "^1.1.0" });
+    const first = makeClone({ "@intisy-ai/basekit": "^1.1.0" });
     const home = homeFor(first);
     const install = fakeInstaller();
     materializeLibraries(first, home, () => {}, install);
 
     const second = join(first, "..", "second");
     mkdirSync(second, { recursive: true });
-    writeFileSync(join(second, "package.json"), JSON.stringify({ name: "second", dependencies: { "@intisy-ai/core-auth": "^1.1.0" } }));
+    writeFileSync(join(second, "package.json"), JSON.stringify({ name: "second", dependencies: { "@intisy-ai/anthropic-translator": "^1.1.0" } }));
     materializeLibraries(second, home, () => {}, install);
 
     const manifest = JSON.parse(readFileSync(join(home, "package.json"), "utf8")) as { dependencies: Record<string, string> };
-    expect(Object.keys(manifest.dependencies).sort()).toEqual(["@intisy-ai/core", "@intisy-ai/core-auth"]);
+    expect(Object.keys(manifest.dependencies).sort()).toEqual(["@intisy-ai/anthropic-translator", "@intisy-ai/basekit"]);
   });
 
   it("reports a failed install rather than claiming the store is filled", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "^1.1.0" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0" });
     const home = homeFor(sourceDir);
     const logged: string[] = [];
 
@@ -252,7 +252,7 @@ describe("materializeLibraries", () => {
       throw new Error("offline");
     });
 
-    expect(results).toEqual([{ specifier: "@intisy-ai/core", status: "conflict", detail: "install failed: offline" }]);
+    expect(results).toEqual([{ specifier: "@intisy-ai/basekit", status: "conflict", detail: "install failed: offline" }]);
     expect(logged.join("\n")).toContain("offline");
   });
 
@@ -269,7 +269,7 @@ describe("materializeLibraries", () => {
 
 describe("dropLibrary", () => {
   it("removes the entry and re-runs the install so npm prunes it", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "^1.1.0", "@intisy-ai/api": "^1.0.2" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0", "@intisy-ai/api": "^1.0.2" });
     const home = homeFor(sourceDir);
     const install = fakeInstaller();
     materializeLibraries(sourceDir, home, () => {}, install);
@@ -277,17 +277,17 @@ describe("dropLibrary", () => {
     expect(dropLibrary("@intisy-ai/api", home, () => {}, install)).toBe(true);
 
     const manifest = JSON.parse(readFileSync(join(home, "package.json"), "utf8")) as { dependencies: Record<string, string> };
-    expect(Object.keys(manifest.dependencies)).toEqual(["@intisy-ai/core"]);
+    expect(Object.keys(manifest.dependencies)).toEqual(["@intisy-ai/basekit"]);
     expect(install.calls).toHaveLength(2);
   });
 
   it("reports nothing dropped for a library the home never asked for", () => {
-    const sourceDir = makeClone({ "@intisy-ai/core": "^1.1.0" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0" });
     const home = homeFor(sourceDir);
     const install = fakeInstaller();
     materializeLibraries(sourceDir, home, () => {}, install);
 
-    expect(dropLibrary("@intisy-ai/core-proxy", home, () => {}, install)).toBe(false);
+    expect(dropLibrary("@intisy-ai/claude-code-proxy", home, () => {}, install)).toBe(false);
     expect(install.calls).toHaveLength(1);
   });
 });
@@ -301,8 +301,8 @@ describe("pruneAbandonedPluginStore", () => {
   }
 
   function writeStore(dir: string): void {
-    mkdirSync(join(dir, "@intisy-ai", "core"), { recursive: true });
-    writeFileSync(join(dir, "@intisy-ai", "core", "package.json"), "{}");
+    mkdirSync(join(dir, "@intisy-ai", "basekit"), { recursive: true });
+    writeFileSync(join(dir, "@intisy-ai", "basekit", "package.json"), "{}");
   }
 
   it("removes the abandoned plugin-directory store once the real store is populated", () => {
@@ -343,7 +343,7 @@ describe("pruneAbandonedPluginStore", () => {
 
     pruneAbandonedPluginStore(pluginDir, home);
 
-    expect(existsSync(join(sharedStoreDir(home), "@intisy-ai", "core", "package.json"))).toBe(true);
+    expect(existsSync(join(sharedStoreDir(home), "@intisy-ai", "basekit", "package.json"))).toBe(true);
   });
 
   it("reports a locked directory as an error instead of failing the caller's deploy", () => {

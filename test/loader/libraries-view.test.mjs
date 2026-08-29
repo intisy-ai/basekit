@@ -1,5 +1,5 @@
 // The Libraries tab reports what is resolvable from this home. The reading comes from the
-// plugin manager (the thing that fills the store), so core-loader keeps no second copy of
+// plugin manager (the thing that fills the store), so the loader module keeps no second copy of
 // the rules and has nothing to show when no manager is loadable.
 import { describe, it, beforeEach, afterEach } from "vitest";
 import assert from "node:assert";
@@ -47,7 +47,7 @@ afterEach(() => {
 describe("librariesTab", () => {
   it("lists the shared store with its versions and who declares each library", () => {
     withUpdater({
-      shared: [{ specifier: "@intisy-ai/core", version: "2.1.0", usedBy: ["stub-auth", "wakatime-sync"] }],
+      shared: [{ specifier: "@intisy-ai/basekit", version: "2.1.0", usedBy: ["stub-auth", "wakatime-sync"] }],
       plugins: [],
     });
     const t = collect();
@@ -55,7 +55,7 @@ describe("librariesTab", () => {
     librariesTab.render(t.ctx, t.api);
 
     const text = t.body.join("\n") + t.sticky.join("\n");
-    assert.match(text, /@intisy-ai\/core/);
+    assert.match(text, /@intisy-ai\/basekit/);
     assert.match(text, /2\.1\.0/);
     assert.match(text, /stub-auth, wakatime-sync/);
     assert.match(t.sticky.join("\n"), /1 shared/);
@@ -79,7 +79,7 @@ describe("librariesTab", () => {
   // A library that never got written is exactly what this tab exists to surface: the
   // plugin importing it will fail to load and nothing else says why.
   it("marks a library that is declared but has no version on disk", () => {
-    withUpdater({ shared: [{ specifier: "@intisy-ai/core", version: "", usedBy: ["stub-auth"] }], plugins: [] });
+    withUpdater({ shared: [{ specifier: "@intisy-ai/basekit", version: "", usedBy: ["stub-auth"] }], plugins: [] });
     const t = collect();
 
     librariesTab.render(t.ctx, t.api);
@@ -88,7 +88,7 @@ describe("librariesTab", () => {
   });
 
   it("says a shared library nothing declares is unused", () => {
-    withUpdater({ shared: [{ specifier: "@intisy-ai/core", version: "2.1.0", usedBy: [] }], plugins: [] });
+    withUpdater({ shared: [{ specifier: "@intisy-ai/basekit", version: "2.1.0", usedBy: [] }], plugins: [] });
     const t = collect();
 
     librariesTab.render(t.ctx, t.api);
