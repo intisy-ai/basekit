@@ -21,7 +21,7 @@ export type {
 export { isValidProfile, HandleIrError, isHandleIrError } from "./types.js";
 
 
-export { claudeTiers, readModelMap, catalogEntries, normalizeChain, resolveModelMap, modelEnvPairs } from "./model-map.js";
+export { profileTiers, readModelMap, catalogEntries, normalizeChain, resolveModelMap, modelEnvPairs } from "./model-map.js";
 
 export { makeDynamicResolver } from "./handler-resolver.js";
 

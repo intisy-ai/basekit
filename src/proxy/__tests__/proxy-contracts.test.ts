@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
 
-const repo = fileURLToPath(new URL("../..", import.meta.url));
+const repo = fileURLToPath(new URL("../../..", import.meta.url));
 
 function contractFiles(dir: string): string[] {
   // src/generated also holds the TeaVM bundle, which this emission does not produce.
@@ -23,11 +23,11 @@ it("keeps the committed front-door key identical to what the java emits", () => 
   ], { cwd: repo, stdio: "inherit" });
 
   const emitted = contractFiles(scratch);
-  const committed = contractFiles(join(repo, "src", "generated"));
+  const committed = contractFiles(join(repo, "src", "proxy", "generated"));
   expect(emitted).toEqual(committed);
   for (const name of emitted) {
     expect(readFileSync(join(scratch, name), "utf8")).toBe(
-      readFileSync(join(repo, "src", "generated", name), "utf8"),
+      readFileSync(join(repo, "src", "proxy", "generated", name), "utf8"),
     );
   }
 });

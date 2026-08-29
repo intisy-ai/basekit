@@ -1,0 +1,42 @@
+// Includes a gradle module that lives inside a sibling submodule.
+//
+// Gradle settings do not nest, so every consumer has to re-declare the modules its
+// submodules provide. Declaring them by path duplicates the same
+// "<submodule>/java/<module>" convention in each repo, which is what drifts. The
+// convention lives here instead, so a settings.gradle names the module it wants and
+// the submodule that supplies it.
+//
+// The submodule is named rather than searched for on purpose: several submodules ship
+// a module called "teavm" (core-proxy and core-ir both do), so searching would pick one
+// by directory order and silently compile a different module than intended.
+//
+// Usage, from a repo's settings.gradle:
+//   apply from: file("core/gradle/submodule-modules.gradle")
+//   includeFromSubmodule ":routing", "core-proxy"
+//
+// A module may sit at its repository root, one directory per module, or under a java/
+// wrapper while that repo has not migrated yet, and the consuming settings.gradle may
+// itself be at either level. All four combinations are probed rather than assumed, so a
+// repo can migrate on its own schedule without every consumer moving with it.
+
+ext.includeFromSubmodule = { String path, String submodule ->
+  def name = path.startsWith(":") ? path.substring(1) : path
+  // Relative to the consuming settings.gradle, not to this script: file() here would
+  // resolve against core/gradle/ and look for the submodule inside core itself.
+  def candidates = [
+    "${submodule}/${name}",
+    "${submodule}/java/${name}",
+    "../${submodule}/${name}",
+    "../${submodule}/java/${name}",
+  ]
+  def dir = candidates.collect { new File(settingsDir, it).canonicalFile }.find { it.isDirectory() }
+  if (dir == null) {
+    throw new GradleException(
+      "settings.gradle asks for ${path} from '${submodule}', but none of ${candidates} exists " +
+      "under ${settingsDir}. The submodule is probably not checked out " +
+      "(git submodule update --init --recursive)."
+    )
+  }
+  include path
+  project(path).projectDir = dir
+}

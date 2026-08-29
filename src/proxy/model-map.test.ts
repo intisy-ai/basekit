@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { initCoreProxy } from "./core-proxy-loader.js";
-import { resolveModelMap, claudeTiers, normalizeChain, modelEnvPairs } from "./model-map.js";
+import { resolveModelMap, profileTiers, normalizeChain, modelEnvPairs } from "./model-map.js";
 
 beforeAll(() => initCoreProxy());
 
@@ -99,12 +99,12 @@ it("normalizeChain: legacy object -> array; array passthrough; filters invalid",
   expect(normalizeChain(null)).toEqual([]);
 });
 
-it("claudeTiers: empty catalog (no models.json yet) falls back to profile.tierFallback", () => {
-  expect(claudeTiers(dir, profile)).toEqual(profile.tierFallback);
+it("profileTiers: empty catalog (no models.json yet) falls back to profile.tierFallback", () => {
+  expect(profileTiers(dir, profile)).toEqual(profile.tierFallback);
 });
 
-it("claudeTiers: detects families from the tier-source provider's ranking, ordered by tierOrder", () => {
-  expect(claudeTiers(richDir, profile)).toEqual(["opus", "sonnet", "haiku", "fable"]);
+it("profileTiers: detects families from the tier-source provider's ranking, ordered by tierOrder", () => {
+  expect(profileTiers(richDir, profile)).toEqual(["opus", "sonnet", "haiku", "fable"]);
 });
 
 it("resolveModelMap: a fully-stored tier is kept as-is (not derived)", () => {

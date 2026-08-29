@@ -1,7 +1,7 @@
 // Environment: app identity, filesystem paths, static catalogs, and the file
 // logger. All values here are read-only constants shared across modules.
 
-import { existsSync, mkdirSync } from "fs";
+import { appendFileSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import { appPathNames } from "../index.js";
@@ -91,7 +91,7 @@ export function tuiLog(msg: string, isError?: boolean): void {
     var dateStr = new Date().toISOString().split("T")[0];
     var logsDir = join(CONFIG_DIR, "logs", dateStr);
     if (!existsSync(logsDir)) mkdirSync(logsDir, { recursive: true });
-    require("fs").appendFileSync(join(logsDir, "loader-tui-" + TUI_START_TIME + ".log"),
+    appendFileSync(join(logsDir, "loader-tui-" + TUI_START_TIME + ".log"),
       "[" + new Date().toISOString() + "]" + (isError ? " [ERROR]" : "") + " " + msg + "\n");
   } catch {}
 }

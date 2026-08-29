@@ -1,0 +1,34 @@
+package io.github.intisy.ai.shared.routing;
+
+/**
+ * A single model entry from a {@link ModelCatalogProvider}, matching one entry of the existing
+ * {@code GET /v1/models} wire shape's {@code models{id: {name,context?,output?}}} map (list order
+ * from {@link ModelCatalogProvider#models} is the wire shape's {@code ranking} array).
+ */
+public final class ModelInfo {
+    /** The model id a routing chain names. */
+    public String id;
+    /** The model's display name. */
+    public String name;
+    /** The model's context window, in tokens. */
+    public int context;
+    /** The model's maximum output, in tokens. */
+    public int output;
+
+    /** Empty constructor for JSON deserialization. */
+    public ModelInfo() {
+    }
+
+    /**
+     * @param id the model id
+     * @param name the model's display name
+     * @param context the model's context window, in tokens
+     * @param output the model's maximum output, in tokens
+     */
+    public ModelInfo(String id, String name, int context, int output) {
+        this.id = id;
+        this.name = name;
+        this.context = context;
+        this.output = output;
+    }
+}

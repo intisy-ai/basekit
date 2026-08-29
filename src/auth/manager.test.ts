@@ -91,7 +91,9 @@ describe("reportRateLimit: acquire -> rate-limit -> rotate -> recover", () => {
     const first = await mgr.acquire(lane);
     expect(first.account.id).toBe("a");
 
-    const resetAt = Date.now() + 150;
+    // Long enough that the assertions inside the window cannot outrun it: the suite runs every
+    // module's files in one process, so a short wall-clock window flaps under that load.
+    const resetAt = Date.now() + 2000;
     mgr.reportRateLimit("a", lane, resetAt);
 
     // persisted onto the store, not just in memory: rateLimitResetTimes.chat is set
@@ -107,7 +109,7 @@ describe("reportRateLimit: acquire -> rate-limit -> rotate -> recover", () => {
     p.activeIndexByLane[lane] = 0;
     store.put("accounts.json", JSON.stringify({ version: 1, providers: { [PROVIDER]: p } }));
 
-    await sleep(250);
+    await sleep(2200);
     const third = await mgr.acquire(lane);
     expect(third.account.id).toBe("a");
   });
@@ -173,7 +175,9 @@ describe("reportError yields to an active provider reset (F4: one owner of usabl
     seed(pool([account("a"), account("b")], 0));
     const mgr = manager({ selection: "sticky", backoff: { baseMs: 50, maxMs: 50 } });
 
-    const resetAt = Date.now() + 150;
+    // Long enough that the assertions inside the window cannot outrun it: the suite runs every
+    // module's files in one process, so a short wall-clock window flaps under that load.
+    const resetAt = Date.now() + 2000;
     mgr.reportRateLimit("a", lane, resetAt);
     mgr.reportError("a", lane, 0, "boom"); // same lane as the active reset
 
@@ -185,7 +189,7 @@ describe("reportError yields to an active provider reset (F4: one owner of usabl
     const duringReset = await mgr.acquire(lane);
     expect(duringReset.account.id).toBe("b");
 
-    await sleep(200);
+    await sleep(2200);
     const p = storedPool();
     p.activeIndexByLane[lane] = 0;
     store.put("accounts.json", JSON.stringify({ version: 1, providers: { [PROVIDER]: p } }));

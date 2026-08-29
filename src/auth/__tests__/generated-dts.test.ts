@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
 
-const repo = fileURLToPath(new URL("../..", import.meta.url));
+const repo = fileURLToPath(new URL("../../..", import.meta.url));
 
 function emit(module: string, extra: string[] = []): string {
   const scratch = mkdtempSync(join(tmpdir(), "core-auth-dts-"));
@@ -22,7 +22,7 @@ function emit(module: string, extra: string[] = []): string {
 function expectMatchesCommitted(scratch: string, names: string[]): void {
   expect(readdirSync(scratch).sort()).toEqual(names);
   for (const name of names) {
-    expect(readFileSync(join(scratch, name), "utf8")).toBe(readFileSync(join(repo, "src", "generated", name), "utf8"));
+    expect(readFileSync(join(scratch, name), "utf8")).toBe(readFileSync(join(repo, "src", "auth", "generated", name), "utf8"));
   }
 }
 

@@ -13,9 +13,9 @@ import { Worker } from "node:worker_threads";
 import { loadAccounts, saveAccounts, updateAccounts, addAccount, removeAccount, LockTimeoutError } from "./accounts.js";
 import { setActivityEmitter } from "./activity.js";
 
-const pkgRoot = fileURLToPath(new URL("..", import.meta.url));
-const distAccounts = join(pkgRoot, "dist", "accounts.js");
-const srcAccounts = join(pkgRoot, "src", "accounts.ts");
+const pkgRoot = fileURLToPath(new URL("../..", import.meta.url));
+const distAccounts = join(pkgRoot, "dist", "auth", "accounts.js");
+const srcAccounts = join(pkgRoot, "src", "auth", "accounts.ts");
 const workerUrl = new URL("./accounts.lock-worker.mjs", import.meta.url);
 const holdWorkerUrl = new URL("./accounts.lock-hold-worker.mjs", import.meta.url);
 const contendWorkerUrl = new URL("./accounts.lock-contend-worker.mjs", import.meta.url);

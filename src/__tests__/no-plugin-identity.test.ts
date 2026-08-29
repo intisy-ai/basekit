@@ -27,6 +27,30 @@ function sourceFiles(dir: string): string[] {
   return out;
 }
 
+const PLUGIN_IDS = ["plugin-updater", "sync-bridge", "custom-auth", "config-ledger", "wakatime-sync"];
+
+const CODE = /\.(ts|js|mjs|cjs)$/;
+
+// Naming a plugin in prose is how the ecosystem is meant to work: the rule forbids LINKING to one,
+// not mentioning it. Comments are therefore stripped from code, while a data file is scanned whole,
+// because a plugin table is the violation whatever format carries it.
+function scannable(file: string): string {
+  const text = readFileSync(file, "utf-8");
+  if (!CODE.test(file)) return text;
+  return text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^[ \t]*\/\/.*$/gm, "").replace(/([^:"'`\\])\/\/.*$/gm, "$1");
+}
+
+function pluginsNamedUnder(dir: string): string[] {
+  const offenders: string[] = [];
+  for (const file of sourceFiles(dir)) {
+    const text = scannable(file);
+    for (const id of PLUGIN_IDS) {
+      if (text.includes(id)) offenders.push(`${file} names ${id}`);
+    }
+  }
+  return offenders;
+}
+
 describe("core holds no plugin identity", () => {
   it("exports no plugin registry", () => {
     for (const name of ["KNOWN_PLUGINS", "knownPlugins", "pluginByCapability", "isBootstrapPlugin"]) {
@@ -35,28 +59,14 @@ describe("core holds no plugin identity", () => {
   });
 
   it("names no specific plugin anywhere in its source", () => {
-    const offenders: string[] = [];
-    for (const file of sourceFiles(SOURCE_DIR)) {
-      const text = readFileSync(file, "utf-8");
-      for (const id of ["plugin-updater", "sync-bridge", "custom-auth", "config-ledger", "wakatime-sync"]) {
-        if (text.includes(id)) offenders.push(`${file} names ${id}`);
-      }
-    }
-    expect(offenders).toEqual([]);
+    expect(pluginsNamedUnder(SOURCE_DIR)).toEqual([]);
   });
 
   it("catches a plugin id in a non-TypeScript data file, not just .ts", () => {
     const probePath = join(SOURCE_DIR, "__guard-probe.json");
     writeFileSync(probePath, JSON.stringify([{ id: "plugin-updater" }]));
     try {
-      const offenders: string[] = [];
-      for (const file of sourceFiles(SOURCE_DIR)) {
-        const text = readFileSync(file, "utf-8");
-        for (const id of ["plugin-updater", "sync-bridge", "custom-auth", "config-ledger", "wakatime-sync"]) {
-          if (text.includes(id)) offenders.push(`${file} names ${id}`);
-        }
-      }
-      expect(offenders).toContain(`${probePath} names plugin-updater`);
+      expect(pluginsNamedUnder(SOURCE_DIR)).toContain(`${probePath} names plugin-updater`);
     } finally {
       unlinkSync(probePath);
     }

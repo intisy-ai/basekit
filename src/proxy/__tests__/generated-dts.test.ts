@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
 
-const repo = fileURLToPath(new URL("../..", import.meta.url));
+const repo = fileURLToPath(new URL("../../..", import.meta.url));
 
 function emit(module: string, extra: string[] = []): string {
   const scratch = mkdtempSync(join(tmpdir(), "core-proxy-dts-"));
@@ -22,7 +22,7 @@ function emit(module: string, extra: string[] = []): string {
 function expectMatchesCommitted(scratch: string, names: string[]): void {
   expect(readdirSync(scratch).sort()).toEqual(names);
   for (const name of names) {
-    expect(readFileSync(join(scratch, name), "utf8")).toBe(readFileSync(join(repo, "src", "generated", name), "utf8"));
+    expect(readFileSync(join(scratch, name), "utf8")).toBe(readFileSync(join(repo, "src", "proxy", "generated", name), "utf8"));
   }
 }
 
@@ -31,5 +31,5 @@ it("keeps the committed contract declarations identical to what the java emits",
 });
 
 it("keeps the committed teavm declarations identical to what the java emits", () => {
-  expectMatchesCommitted(emit(":teavm"), ["core-proxy.teavm.d.ts"]);
+  expectMatchesCommitted(emit(":proxy-teavm"), ["core-proxy.teavm.d.ts"]);
 });

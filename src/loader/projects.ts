@@ -2,6 +2,7 @@
 // session database, whichever it declares), build the display list, and the
 // pin/hide/change-path actions.
 
+import { createRequire } from "node:module";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { execSync } from "child_process";
@@ -59,6 +60,10 @@ interface SqliteHandle {
   /** Closes the database. */
   close(): void;
 }
+
+// sqlite is loaded through require rather than import() because the caller is synchronous and
+// either module may be absent, which require reports as a catchable throw.
+const require = createRequire(import.meta.url);
 
 // Lazy sqlite: node's built-in (node 22+) first, bun:sqlite fallback. Loaded lazily
 // (NOT a top-level import) so the loader TUI runs under plain `node`, no bun required.

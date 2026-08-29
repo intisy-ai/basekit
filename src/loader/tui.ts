@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, unlinkSync } from "fs";
-import { execSync } from "child_process";
+import { createRequire } from "node:module";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, rmSync, unlinkSync } from "fs";
+import { exec, execSync } from "child_process";
 import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { homedir } from "os";
 import { S } from "./state.js";
 import { librariesTab } from "./views/libraries.js";
@@ -66,32 +67,28 @@ interface LoaderGlobalApi {
   
   // Deploy a plugin binary/script to the active plugins directory
   deployPlugin: function(pluginName: string, sourcePath: string) {
-    const fs = require('fs');
-    const path = require('path');
-    if (!fs.existsSync(PLUGINS_DIR)) fs.mkdirSync(PLUGINS_DIR, { recursive: true });
+    if (!existsSync(PLUGINS_DIR)) mkdirSync(PLUGINS_DIR, { recursive: true });
     
     const pluginFile = pluginName.endsWith('.js') ? pluginName : pluginName + '.js';
-    const destPath = path.join(PLUGINS_DIR, pluginFile);
+    const destPath = join(PLUGINS_DIR, pluginFile);
     
-    if (fs.existsSync(sourcePath)) {
-      fs.copyFileSync(sourcePath, destPath);
+    if (existsSync(sourcePath)) {
+      copyFileSync(sourcePath, destPath);
     }
   },
   
   // Remove a plugin's deployed files
   removePluginFiles: function(pluginName: string) {
-    const fs = require('fs');
-    const path = require('path');
     const pluginFile = pluginName.endsWith('.js') ? pluginName : pluginName + '.js';
-    const deployedPath = path.join(PLUGINS_DIR, pluginFile);
-    if (fs.existsSync(deployedPath)) {
-      try { fs.unlinkSync(deployedPath); } catch {}
+    const deployedPath = join(PLUGINS_DIR, pluginFile);
+    if (existsSync(deployedPath)) {
+      try { unlinkSync(deployedPath); } catch {}
     }
     
     const folderName = pluginName.replace(/[^a-zA-Z0-9-]/g, '-');
-    const repoDir = path.join(REPOS_DIR, "intisy", folderName);
-    if (fs.existsSync(repoDir)) {
-      try { fs.rmSync(repoDir, { recursive: true, force: true }); } catch {}
+    const repoDir = join(REPOS_DIR, "intisy", folderName);
+    if (existsSync(repoDir)) {
+      try { rmSync(repoDir, { recursive: true, force: true }); } catch {}
     }
   }
 };
@@ -218,7 +215,6 @@ async function loadCustomTabs() {
   // Built in, but registered here so it survives the reset above and plugin tabs
   // append after it rather than in front of it.
   tuiApi.registerTab(librariesTab);
-  const { pathToFileURL } = require("url");
   async function loadExt(extPath: string | undefined) {
     if (!extPath || !existsSync(extPath)) return;
     try {
@@ -243,7 +239,6 @@ async function loadCustomTabs() {
   } catch(e) {}
 }
 
-var { exec } = require("child_process");
 
 
 S.items = buildList();
@@ -273,12 +268,16 @@ if (arg) {
     var passed = 0, failed = 0;
 
     console.log("Core Checks:");
-    const fs = require('fs');
-    if (fs.existsSync(PLUGINS_DIR)) {
+    if (existsSync(PLUGINS_DIR)) {
       console.log("\x1b[32m  [✓]\x1b[0m Plugin directory exists"); passed++;
     } else {
       console.log("\x1b[31m  [✗]\x1b[0m Plugin directory missing"); failed++;
     }
+
+// A deployed plugin is resolved by PATH at run time, so it cannot be a static import, and the
+// caller is synchronous. require keeps both properties and reports an unloadable plugin as a
+// catchable throw rather than an unhandled rejection.
+const require = createRequire(import.meta.url);
 
     var testApi = {
       addTest: function(category: string, name: string, fn: () => DoctorResult | null) {
@@ -303,7 +302,7 @@ if (arg) {
     plugins.forEach(function(p) {
       if (!p.enabled) return;
       var pluginPath = join(PLUGINS_DIR, p.pluginFile || (p.name + ".js"));
-      if (fs.existsSync(pluginPath)) {
+      if (existsSync(pluginPath)) {
         try {
           var mod = require(pluginPath);
           if (mod.registerTests) {

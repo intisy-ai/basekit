@@ -12,5 +12,8 @@ export default defineConfig({
     include: ["src/**/*.test.ts", "test/**/*.test.{ts,mjs}"],
     setupFiles: ["test/temp-home.setup.ts"],
     testTimeout: 600000,
+    // Hooks get the same allowance: a suite that shells out to Gradle or rebuilds dist before its
+    // first test needs longer than the 10s default, and the whole merged tree is what it builds.
+    hookTimeout: 600000,
   },
 });

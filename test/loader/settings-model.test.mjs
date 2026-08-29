@@ -1,7 +1,9 @@
 import { describe, it } from "vitest";
 import assert from "node:assert";
 import { buildSettingsEntries, firstSelectableIndex, buildGlobalSection, splitBySections } from "../../dist/loader/settings-model.js";
-import { createRequire } from "node:module";
+// S must arrive by the same import the module under test uses: reaching it through createRequire
+// would hand this file a second, unrelated copy of the state module.
+import { S } from "../../dist/loader/state.js";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -104,8 +106,6 @@ describe("splitBySections", () => {
 });
 
 describe("buildGlobalSection", () => {
-  const require = createRequire(import.meta.url);
-  const { S } = require("../../dist/loader/state.js");
 
   it("renders the settings the host injected, including a choice field", () => {
     S.capabilities = {

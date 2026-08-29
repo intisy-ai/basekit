@@ -1,0 +1,20 @@
+// The annotations are SOURCE-retention and the api contract supplies only the typed-key interfaces,
+// so both are compileOnly: this module's jar carries neither, and nothing here runs at run time.
+dependencies {
+    githubCompileOnly "intisy-ai:api:1.6.0:annotations"
+    githubCompileOnly "intisy-ai:api:1.6.0:contract"
+    // A release asset carries no transitive metadata, so the processor's own annotation types are
+    // named here too, alongside the compile classpath's copy.
+    githubAnnotationProcessor "intisy-ai:api:1.6.0:processor"
+    githubAnnotationProcessor "intisy-ai:api:1.6.0:annotations"
+}
+
+tasks.named("compileJava") {
+    options.compilerArgs += [
+        "-Atsemit.name=contracts",
+        // A compilable .ts rather than an ambient .d.ts: this repo's whole TypeScript surface IS the
+        // emitted file, and tsc copies a declaration file to no output directory.
+        "-Atsemit.ext=.ts",
+        "-Atsemit.keys=@intisy-ai/api/contract",
+    ]
+}

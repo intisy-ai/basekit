@@ -48,14 +48,14 @@ describe("spawn env merge", () => {
   // above actually cover.
   it("every site that starts a child goes through the one helper", () => {
     const sites = [
-      ["src/updater.ts", 1],
-      // src/marketplace.ts is deliberately not pinned here. It does start children (eight curl
+      ["src/loader/updater.ts", 1],
+      // src/loader/marketplace.ts is deliberately not pinned here. It does start children (eight curl
       // catalog fetches), but they are read-only reads that carry no activity env, while the sites
       // listed here are the ones that MUTATE a home and so must be traceable across processes.
-      ["src/plugins.ts", 1],
+      ["src/loader/plugins.ts", 1],
     ];
     for (const [file, expected] of sites) {
-      const text = readFileSync(new URL("../" + file, import.meta.url), "utf8");
+      const text = readFileSync(new URL("../../" + file, import.meta.url), "utf8");
       const found = text.split("spawnEnv(").length - 1;
       assert.strictEqual(found, expected, `${file}: expected ${expected} spawn sites to use spawnEnv, found ${found}`);
       assert.ok(!text.includes("...loaderActivityEnv()"), `${file} still spreads the activity env by hand`);

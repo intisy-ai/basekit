@@ -203,11 +203,10 @@ export function loadPlugins() {
   // is loadable. So this only ever populates the list once a manager is already detected.
   if (!CONFIG_DIR) return [];
   try {
-    var fs = require("fs");
     var candidates = [PLUGINS_JSON, join(CONFIG_DIR, "plugins.json")];
     for (var i = 0; i < candidates.length; i++) {
-      if (fs.existsSync(candidates[i])) {
-        var arr = JSON.parse(fs.readFileSync(candidates[i], "utf-8"));
+      if (existsSync(candidates[i])) {
+        var arr = JSON.parse(readFileSync(candidates[i], "utf-8"));
         if (Array.isArray(arr)) {
           // Another app's loader is a plugin of that app's home, never an entry to offer here.
           return arr.filter(function (e) {

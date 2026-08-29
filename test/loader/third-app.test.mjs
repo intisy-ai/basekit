@@ -18,11 +18,15 @@ function bustDistRequireCache() {
   }
 }
 
-// child_process is a Node builtin, never a dist/ path, so bustDistRequireCache never touches it: the
-// SAME module object survives every case in this file, real exec included. Captured exactly once so
-// a case that stubs it cannot leak a permanently-stubbed exec into a later one.
-const cp = nodeRequire("child_process");
-const REAL_EXEC = cp.exec;
+const { execCalls } = vi.hoisted(() => ({ execCalls: [] }));
+
+// The loader module is ESM, so `exec` is bound at link time and cannot be patched on the module
+// object. Only exec is replaced; execSync and execFileSync pass through, which the tests that clone
+// a loader still need.
+vi.mock("child_process", async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, exec: (command) => { execCalls.push(command); } };
+});
 
 let dir;
 const saved = {};
@@ -66,7 +70,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  cp.exec = REAL_EXEC;
   for (const key of KEYS) {
     if (saved[key] === undefined) delete process.env[key]; else process.env[key] = saved[key];
   }
@@ -97,14 +100,13 @@ describe("an app id no library has ever seen drives every surface", () => {
     expect(loadNpmPluginsWithoutTrait()).toEqual([]);
   });
 
-  it("marketplace: with a declared topic and no awesomeList, the built-in verified list seeds as Curated", () => {
+  it("marketplace: with a declared topic and no awesomeList, the built-in verified list seeds as Curated", async () => {
     writeRegistry(zeta());
-    bustDistRequireCache();
-    const execCalls = [];
-    cp.exec = function (cmd) { execCalls.push(cmd); };
-    const marketplace = nodeRequire("../../dist/loader/marketplace.js");
-    const { S } = nodeRequire("../../dist/loader/state.js");
-    const { FEATURED_PLUGINS } = nodeRequire("../../dist/loader/env.js");
+    vi.resetModules();
+    execCalls.length = 0;
+    const marketplace = await import("../../dist/loader/marketplace.js");
+    const { S } = await import("../../dist/loader/state.js");
+    const { FEATURED_PLUGINS } = await import("../../dist/loader/env.js");
 
     marketplace.fetchCatalogsAsync();
 

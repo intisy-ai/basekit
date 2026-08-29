@@ -10,7 +10,10 @@ const FORBIDDEN = ["plugin-updater", "config-ledger", "sync-bridge", "custom-aut
 
 // data/ is scanned so a JSON catalog can never reintroduce a plugin name behind the guard that
 // exists to catch exactly that. The directory may be absent, which is not a failure.
-const ROOTS = ["src", "data"];
+// This guard covers the LOADER module. Every other module is judged tree-wide by
+// npm-dual-publish's plugin-identity-check, so widening it here would put five modules
+// behind one allowlist and excuse in one what is forbidden in another.
+const ROOTS = ["src/loader", "data"];
 
 // Every root markdown and json file, not just README.md: a fixed name list repeats the exact failure
 // shape (a stale root file the guard never scanned) that is the reason this guard scans the root at
@@ -45,7 +48,7 @@ function sourceFiles(dir: string): string[] {
 
 // fileURLToPath, not new URL().pathname: on Windows the latter yields a leading-slash path that
 // doubles the drive letter when joined.
-const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+const repoRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 function relativeTo(repoRoot: string, file: string): string {
   return file.slice(repoRoot.length + 1).replace(/\\/g, "/");
@@ -55,9 +58,9 @@ function relativeTo(repoRoot: string, file: string): string {
 // which plugin something is for. Each entry excuses only the names listed against it, so a
 // different forbidden name in that same file still fails.
 const PROSE_ALLOWED: Record<string, string[]> = {
-  "src/format.ts": ["claude-code-loader"],
-  "src/loader-runtime.ts": ["claude-code-loader", "opencode-loader"],
-  "src/proxy-runner.ts": ["claude-code-loader", "opencode-loader"],
+  "src/loader/format.ts": ["claude-code-loader"],
+  "src/loader/loader-runtime.ts": ["claude-code-loader", "opencode-loader"],
+  "src/loader/proxy-runner.ts": ["claude-code-loader", "opencode-loader"],
   // CONTENT.md is the README's source, generated into README.md on the default branch, so the two
   // carry the same prose and earn the same allowance.
   "CONTENT.md": ["claude-code-loader", "opencode-loader"],
@@ -98,13 +101,13 @@ const CHILD_STARTERS = /\b(exec|execSync|execFile|execFileSync|spawn|spawnSync)\
 //   src/plugin-manager.ts  builds the bootstrap command as text for an OPERATOR to run.
 //   src/catalogs.ts        the MCP server catalog, whose `command: "npx"` entries are commands the
 //   src/marketplace.ts     user's own MCP client runs, never this library.
-const NPX_STRING_ALLOWED = ["src/plugin-manager.ts", "src/catalogs.ts", "src/marketplace.ts"];
+const NPX_STRING_ALLOWED = ["src/loader/plugin-manager.ts", "src/loader/catalogs.ts", "src/loader/marketplace.ts"];
 const NPX_STRING = /["'`]npx/;
 
 describe("the loader never runs npx", () => {
   it("no line both starts a child process and names npx", () => {
     const offenders: string[] = [];
-    for (const file of sourceFiles(join(repoRoot, "src"))) {
+    for (const file of sourceFiles(join(repoRoot, "src", "loader"))) {
       readFileSync(file, "utf8").split("\n").forEach((line, index) => {
         if (CHILD_STARTERS.test(line) && line.includes("npx")) {
           offenders.push(`${relativeTo(repoRoot, file)}:${index + 1}`);
@@ -116,7 +119,7 @@ describe("the loader never runs npx", () => {
 
   it("no file outside the allowlist holds an npx command string", () => {
     const offenders: string[] = [];
-    for (const file of sourceFiles(join(repoRoot, "src"))) {
+    for (const file of sourceFiles(join(repoRoot, "src", "loader"))) {
       const relative = relativeTo(repoRoot, file);
       if (NPX_STRING_ALLOWED.includes(relative)) continue;
       readFileSync(file, "utf8").split("\n").forEach((line, index) => {

@@ -6,7 +6,7 @@
 // so the test can assert on the error's name/message without relying on how Node
 // clones a custom Error subclass across the thread boundary.
 import { parentPort, workerData } from "node:worker_threads";
-import { updateAccounts } from "../dist/accounts.js";
+import { updateAccounts } from "../../dist/auth/accounts.js";
 
 const { dir } = workerData;
 try {

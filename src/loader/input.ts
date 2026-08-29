@@ -1,7 +1,7 @@
 // Keyboard handling: key parsing and the per-page key handlers (projects,
 // plugins, mcp, confirm dialog) plus the text-input handlers.
 
-import { existsSync, unlinkSync } from "fs";
+import { existsSync, rmSync, unlinkSync } from "fs";
 import { join } from "path";
 import { execSync } from "child_process";
 import { RST, BOLD, WHITE, RED, isBooleanRowOn } from "./format.js";
@@ -920,7 +920,7 @@ export function handlePluginKey(key: string): void {
         } else {
           var cdir = join(REPOS_DIR, cpitem.folderName);
           var cdeployed = join(PLUGINS_DIR, (cpitem.pluginFile || cpitem.name + ".js"));
-          if (existsSync(cdir)) { try { var rmS = require("fs").rmSync; if (rmS) rmS(cdir, {recursive:true,force:true}); } catch(e){} }
+          if (existsSync(cdir)) { try { rmSync(cdir, { recursive: true, force: true }); } catch(e){} }
           if (existsSync(cdeployed)) { try { unlinkSync(cdeployed); } catch(e){} }
         }
         var cplugins = loadPlugins();

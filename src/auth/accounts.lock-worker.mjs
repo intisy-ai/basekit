@@ -3,7 +3,7 @@
 // valid JS as-is and import the BUILT output, exercising the exact code that ships).
 // `npm run build` must have produced dist/accounts.js before this runs.
 import { parentPort, workerData } from "node:worker_threads";
-import { updateAccounts } from "../dist/accounts.js";
+import { updateAccounts } from "../../dist/auth/accounts.js";
 
 const { dir, id } = workerData;
 updateAccounts(

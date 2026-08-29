@@ -1,0 +1,57 @@
+pluginManagement {
+    repositories {
+        maven { url = uri("https://intisy.github.io/brazier/maven") }
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id "org.gradle.toolchains.foojay-resolver-convention" version "0.8.0"
+}
+
+rootProject.name = "basekit-java"
+
+// :annotations, :processor and :contract are api's published jars, resolved by github-gradle from
+// its release assets.
+
+// :contracts - the capability, service and event vocabulary basekit mints for the hosts that render
+// it and the plugins that provide it.
+include ":contracts"
+
+// :runtime - the root module's engines, Java 8 and dependency-free so they transpile.
+include ":runtime"
+
+// :ir - neutral IR types (request/response/streaming/extensions) plus the JSON codec SPI,
+// transpilable Java 8, no gson/net/nio/reflect/threads.
+include ":ir"
+
+// :js-base - the TeaVM service implementations (SimpleJsonCodec, JsStoreBridge, JsHttpClientBridge)
+// every other :teavm module here shares rather than restating.
+include ":js-base"
+
+// :accounts - the AccountManager/AccountStore/AuthConfig/OAuth/Selection engine.
+include ":accounts"
+
+// :auth-contracts - the provider vocabulary: Provider, the lane descriptor, and the OAuth, quota,
+// catalog and config contracts a provider plugin implements.
+include ":auth-contracts"
+
+// :routing - the routing ENGINE only (Router/ModelMap/RateLimit/HandlerResolvers/Notifier).
+include ":routing"
+
+// :proxy-contracts - the routing vocabulary a proxy plugin implements, and the front-door key.
+// Apart from :routing so a plugin implementing it does not link the engine.
+include ":proxy-contracts"
+
+// One build cannot carry two projects at the same path, and core-ir and core-proxy each called their
+// TeaVM surface ":teavm" while standalone. Each is named for the module it exports, the shape core
+// and core-auth already used for exactly this reason.
+include ":core-teavm"
+include ":ir-teavm"
+include ":auth-teavm"
+include ":proxy-teavm"
+
+// :classlib - the shared class library every consuming bundle imports instead of emitting its own
+// copy. Its contents come from :runtime and :contracts as whole jars plus a list of class-library
+// classes, never from what its entry point reaches.
+include ":classlib"

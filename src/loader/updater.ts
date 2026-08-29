@@ -1,8 +1,9 @@
 // The plugin manager this home resolved, and the npm-plugin / repo helpers that wrap it.
 
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
 import { readJson } from "./json.js";
 import { join } from "path";
+import { createRequire } from "node:module";
 import { execSync } from "child_process";
 import { pathToFileURL } from "url";
 import { CONFIG_DIR, CACHE_PKG_DIR, REPOS_DIR, APP_ID, tuiLog } from "./env.js";
@@ -16,6 +17,10 @@ import type { CatalogEntry } from "./capability-catalog.js";
 import { bootstrapCommand, managerEntries, resolvePluginManager, PLUGIN_MANAGEMENT_CAPABILITY } from "./plugin-manager.js";
 import { catalogCacheHours } from "./config.js";
 import type { PluginEntry } from "./config.js";
+
+// Resolved at CALL time, not link time: the suite proves the injected app id reaches the child by
+// replacing child_process.spawn, and an ESM binding captured at link time would not see that.
+const childProcess = (): typeof import("child_process") => createRequire(import.meta.url)("child_process");
 
 /** One npm plugin the app's own list holds, as the Plugins tab needs it. */
 export interface NpmPluginRow {
@@ -142,7 +147,7 @@ export function setupPlugin(repo: PluginEntry & { branch?: string }, done: (erro
     PLUGIN_UPDATER_APP: APP_ID,
     HUB_CONFIG_DIR: CONFIG_DIR,
   });
-  var child = require("child_process").spawn(process.execPath, ["-e", script], { stdio: ["ignore", "ignore", "pipe"], env: childEnv });
+  var child = childProcess().spawn(process.execPath, ["-e", script], { stdio: ["ignore", "ignore", "pipe"], env: childEnv });
   var errBuf = "";
   child.stderr.on("data", function(d: Buffer) { errBuf += d.toString(); });
   child.on("error", function(e: Error) { done(String((e && e.message) || e)); });
@@ -184,7 +189,7 @@ export function loadNpmPlugins(): NpmPluginRow[] {
           // the app installs an npm plugin into its declared package cache as <name>@<spec>/
           var pkgCache = declared.packageCache ? expandPath(declared.packageCache, CONFIG_DIR) : "";
           if (pkgCache && existsSync(pkgCache)) {
-            var cacheEntries = require("fs").readdirSync(pkgCache);
+            var cacheEntries = readdirSync(pkgCache);
             for (var entry of cacheEntries) {
               if (entry !== name && entry.indexOf(name + "@") !== 0) continue;
               var cachedPkg = join(pkgCache, entry, "node_modules", name, "package.json");

@@ -55,7 +55,7 @@ function modelCache(configDir: string): ModelCacheMap {
  * @param profile the profile naming the tier source, order and fallback
  * @returns the tier names, in the order a reader expects them
  */
-export function claudeTiers(configDir: string, profile: RoutingProfile): string[] {
+export function profileTiers(configDir: string, profile: RoutingProfile): string[] {
   const storeJson = JSON.stringify({ "models.json": JSON.stringify(modelCache(configDir)) });
   const profileJson = JSON.stringify(profileToJson(profile));
   const core = getCoreProxy();
