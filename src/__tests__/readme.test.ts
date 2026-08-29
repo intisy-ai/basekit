@@ -80,7 +80,7 @@ describe("renderConfig uses pluginName not pkg.name for the config path", () => 
 });
 
 describe("section renderers", () => {
-  const byId = (id) => DEFAULT_SECTIONS.find((s) => s.id === id);
+  const byId = (id: string) => DEFAULT_SECTIONS.find((s) => s.id === id);
   it("title includes name + badges", () => {
     expect(byId("title")!.render(ctxFixture())).toContain("# demo");
     expect(byId("title")!.render(ctxFixture())).toContain("img.shields.io");

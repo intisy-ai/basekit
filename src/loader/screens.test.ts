@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { flattenScreen, screenRows } from "./screens.js";
+import type { ScreenNode } from "../generated/contracts.js";
 
 const fixture = JSON.parse(readFileSync(join(__dirname, "__fixtures__", "screen-fixture.json"), "utf8"));
 
@@ -44,7 +45,7 @@ describe("screen flatten", () => {
 });
 
 describe("layout depth", () => {
-  function nested(levels, leaf) {
+  function nested(levels: number, leaf: ScreenNode): ScreenNode {
     let node = leaf;
     for (let i = 0; i < levels; i++) node = { kind: "stack", children: [node] };
     return node;

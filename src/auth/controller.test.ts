@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { accountControllerFromManager, refreshAccountToken, verifyAllAccounts } from "./controller.js";
+import type { CoreAccount } from "./types.js";
 
-function fakeManager(accounts) {
+function fakeManager(accounts: CoreAccount[]) {
   return {
     list: () => accounts,
-    mutate: (id, fn) => { const a = accounts.find((x) => x.id === id); if (a) fn(a); },
+    mutate: (id: string, fn: (account: CoreAccount) => void) => { const a = accounts.find((x) => x.id === id); if (a) fn(a); },
     remove: vi.fn(),
     refresh: vi.fn(),
   };

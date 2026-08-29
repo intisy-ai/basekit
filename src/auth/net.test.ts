@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { proxiedFetch, timeoutFetch } from "./net.js";
 
-function fakeProxyManager(url) {
+function fakeProxyManager(url: string | null) {
   return {
     selectForAccount: vi.fn(() => url),
     reportResult: vi.fn(),

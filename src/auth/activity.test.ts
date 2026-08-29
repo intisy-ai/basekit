@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { setActivityEmitter, emitActivity } from "./activity.js";
+import type { ActivitySpec } from "../activity.types.js";
 
 describe("core-auth activity seam", () => {
   beforeEach(() => setActivityEmitter(null));
@@ -10,7 +11,7 @@ describe("core-auth activity seam", () => {
 
   it("forwards to the injected emitter", () => {
     const seen: any[] = [];
-    setActivityEmitter((spec, source) => seen.push({ spec, source }));
+    setActivityEmitter((spec: ActivitySpec, source: string) => seen.push({ spec, source }));
     emitActivity({ topic: "account", action: "account_added", subject: { kind: "account", id: "a@b.c" } }, "stub-auth");
     expect(seen).toHaveLength(1);
     expect(seen[0].spec.action).toBe("account_added");
