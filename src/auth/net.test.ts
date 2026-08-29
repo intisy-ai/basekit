@@ -1,6 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import { proxiedFetch, timeoutFetch } from "./net.js";
 
+// Bun honours a `proxy` on the fetch init, which is the extension proxiedFetch sets.
+type ProxyInit = RequestInit & { proxy?: string };
+
 function fakeProxyManager(url: string | null) {
   return {
     selectForAccount: vi.fn(() => url),
@@ -11,7 +14,7 @@ function fakeProxyManager(url: string | null) {
 describe("proxiedFetch", () => {
   it("applies the selected proxy and reports success with elapsed ms", async () => {
     const response = new Response("ok");
-    const fetchImpl = vi.fn(async () => response);
+    const fetchImpl = vi.fn(async (_input: string | URL | Request, _init?: ProxyInit) => response);
     const proxyManager = fakeProxyManager("http://proxy");
 
     const result = await proxiedFetch("https://api.example.com", { method: "GET" }, {
@@ -80,7 +83,7 @@ describe("proxiedFetch", () => {
 
   it("works with no proxyManager at all (plain direct fetch)", async () => {
     const response = new Response("ok");
-    const fetchImpl = vi.fn(async () => response);
+    const fetchImpl = vi.fn(async (_input: string | URL | Request, _init?: ProxyInit) => response);
 
     const result = await proxiedFetch("https://api.example.com", { method: "GET" }, { fetchImpl });
 
@@ -93,8 +96,8 @@ describe("proxiedFetch", () => {
 
 describe("timeoutFetch", () => {
   it("aborts a fetch that never resolves once timeoutMs elapses", async () => {
-    const fetchImpl = vi.fn((_url: string, init: RequestInit) => new Promise<Response>((_resolve, reject) => {
-      init.signal!.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+    const fetchImpl = vi.fn((_input: string | URL | Request, init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
+      init!.signal!.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
     }));
 
     const started = Date.now();
@@ -105,7 +108,7 @@ describe("timeoutFetch", () => {
 
   it("returns the response and clears the timer when fetch resolves before timeoutMs", async () => {
     const response = new Response("ok");
-    const fetchImpl = vi.fn(async () => response);
+    const fetchImpl = vi.fn(async (_input: string | URL | Request, _init?: ProxyInit) => response);
     const clearTimeoutSpy = vi.spyOn(global, "clearTimeout");
 
     const result = await timeoutFetch("https://api.example.com", { method: "GET" }, 20000, fetchImpl);
@@ -118,7 +121,7 @@ describe("timeoutFetch", () => {
 
   it("passes an abort signal through to fetchImpl alongside the caller's init", async () => {
     const response = new Response("ok");
-    const fetchImpl = vi.fn(async () => response);
+    const fetchImpl = vi.fn(async (_input: string | URL | Request, _init?: ProxyInit) => response);
 
     await timeoutFetch("https://api.example.com", { method: "POST" }, 20000, fetchImpl);
 

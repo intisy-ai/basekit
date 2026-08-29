@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import { serveIr } from "./serve-ir.js";
 import { makeFakeTranslator } from "./__tests__/fake-translator.js";
 import type { IrRequest, IrResponse, IrStreamEvent } from "../ir/index.js";
+import { wireBody } from "./__tests__/wire.js";
 
 const profile = { translator: makeFakeTranslator() } as any;
 const ctx = { configDir: "/tmp", log: () => {}, model: "m-ok", provider: "p" } as any;
@@ -51,7 +52,7 @@ it("reconstructs a thrown typed HandleIrError verbatim", async () => {
   const res = await serveIr(req(), { profile, handleIr, ctx });
   expect(res.status).toBe(429);
   expect(res.headers.get("retry-after")).toBe("5");
-  expect((await res.json()).error.type).toBe("rate_limit_error");
+  expect((await wireBody(res)).error.type).toBe("rate_limit_error");
 });
 
 it("returns 400 for an undecodable body (a pure-IR provider has no wire fallback)", async () => {
@@ -60,7 +61,7 @@ it("returns 400 for an undecodable body (a pure-IR provider has no wire fallback
   const res = await serveIr(new Request("http://x", { method: "POST", body: "<<<bad" }), { profile, handleIr, ctx });
   expect(res.status).toBe(400);
   expect(called).toBe(false);
-  expect((await res.json()).error.type).toBe("invalid_request_error");
+  expect((await wireBody(res)).error.type).toBe("invalid_request_error");
 });
 
 it("rethrows a non-typed error (a genuine bug, not a modeled transport outcome)", async () => {

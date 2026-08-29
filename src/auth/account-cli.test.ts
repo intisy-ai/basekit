@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { runAccountCli, printAccounts } from "./account-cli.js";
 import type { AccountController } from "./types.js";
+import type { AccountCliLoginOpts } from "./account-cli.js";
 
 function fakeAccounts(list: AccountController["list"] = () => []): AccountController {
   return {
@@ -11,13 +12,17 @@ function fakeAccounts(list: AccountController["list"] = () => []): AccountContro
   };
 }
 
+function silenceStdout() {
+  return vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+}
+
 describe("runAccountCli", () => {
   let originalArgv: string[];
-  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let stdoutSpy: ReturnType<typeof silenceStdout>;
 
   beforeEach(() => {
     originalArgv = process.argv;
-    stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    stdoutSpy = silenceStdout();
   });
 
   afterEach(() => {
@@ -30,7 +35,7 @@ describe("runAccountCli", () => {
       { id: "acc1", email: "a@example.com", enabled: true, status: "active" },
     ]);
     process.argv = ["node", "cli.js", "list"];
-    const login = vi.fn();
+    const login = vi.fn(async (_opts: AccountCliLoginOpts) => undefined);
     const handled = await runAccountCli({ providerId: "test-provider", driver: { accounts, login } });
 
     expect(handled).toBe(true);
@@ -50,7 +55,7 @@ describe("runAccountCli", () => {
 
   it("calls the driver's login for login and returns true", async () => {
     const accounts = fakeAccounts();
-    const login = vi.fn(async () => null);
+    const login = vi.fn(async (_opts: AccountCliLoginOpts) => null);
     process.argv = ["node", "cli.js", "login", "pasted-code"];
     const handled = await runAccountCli({ providerId: "test-provider", driver: { accounts, login } });
 
@@ -73,10 +78,10 @@ describe("runAccountCli", () => {
 });
 
 describe("printAccounts", () => {
-  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let stdoutSpy: ReturnType<typeof silenceStdout>;
 
   beforeEach(() => {
-    stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    stdoutSpy = silenceStdout();
   });
 
   afterEach(() => {

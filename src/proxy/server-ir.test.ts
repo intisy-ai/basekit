@@ -12,6 +12,7 @@ import { createProxyServer } from "./server.js";
 import { HandleIrError } from "./types.js";
 import { makeFakeTranslator } from "./__tests__/fake-translator.js";
 import type { IrRequest, IrResponse, IrStreamEvent } from "../ir/index.js";
+import { wireBody } from "./__tests__/wire.js";
 
 const profile = {
   configFile: "claude-code-loader.json", routingKey: "providerRouting", tierSourceProvider: "claude-code",
@@ -146,7 +147,7 @@ it("handleIr throwing a 429-typed HandleIrError triggers fallback, then synthesi
   expect(r.status).toBe(429);
   // Body comes from profile.nativeRateLimit's final synthesis: proves the fallback + final-429 path
   // ran, not the flat 502 error shape.
-  const body = await r.json();
+  const body = await wireBody(r);
   expect(body.error.type).toBe("rate_limit_error");
 });
 
@@ -173,7 +174,7 @@ it("handleIr throwing a 400-typed HandleIrError surfaces verbatim, with no fallb
 
   const r = await fetch(`http://127.0.0.1:${port}/v1/messages`, { method: "POST", body: wireRequest });
   expect(r.status).toBe(400);
-  const body = await r.json();
+  const body = await wireBody(r);
   expect(body.error.type).toBe("invalid_request_error");
   expect(fallbackCalled).toBe(false);
 });
@@ -191,7 +192,7 @@ it("handleIr throwing a plain non-typed error still collapses to a flat 502, unc
 
   const r = await fetch(`http://127.0.0.1:${port}/v1/messages`, { method: "POST", body: wireRequest });
   expect(r.status).toBe(502);
-  const body = await r.json();
+  const body = await wireBody(r);
   expect(body.error.type).toBe("loader_proxy_error");
 });
 
@@ -228,7 +229,7 @@ it("recognizes a foreign-bundle HandleIrError (marker-shaped, not instanceof) an
 
   const r = await fetch(`http://127.0.0.1:${port}/v1/messages`, { method: "POST", body: wireRequest });
   expect(r.status).toBe(429);
-  const body = await r.json();
+  const body = await wireBody(r);
   expect(body.error.type).toBe("rate_limit_error");
 });
 

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, it } from "vitest";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path"; import { tmpdir } from "node:os";
 import { createProxyServer } from "./server.js";
+import { wireBody } from "./__tests__/wire.js";
 
 const profile = {
   configFile: "claude-code-loader.json", routingKey: "providerRouting", tierSourceProvider: "claude-code",
@@ -69,9 +70,9 @@ it("/v1/models falls back to the profile's default context/output when a catalog
   port = await srv.listen();
 
   const r = await fetch(`http://127.0.0.1:${port}/v1/models`);
-  const body = await r.json();
-  const entry = body.data.find((m: any) => m.id === "test-model");
+  const body = await wireBody<{ data: Array<{ id: string; max_input_tokens: number; max_tokens: number }> }>(r);
+  const entry = body.data.find((model) => model.id === "test-model");
   expect(entry).toBeTruthy();
-  expect(entry.max_input_tokens).toBe(128000);
-  expect(entry.max_tokens).toBe(32000);
+  expect(entry!.max_input_tokens).toBe(128000);
+  expect(entry!.max_tokens).toBe(32000);
 });
