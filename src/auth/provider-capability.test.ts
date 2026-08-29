@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { descriptorFor, providerCapability } from "./provider-capability.js";
 import type { ProviderDef } from "./types.js";
+import { emptyIrResponse } from "./__tests__/fixtures.js";
 
 const driver = {
   id: "stub",
@@ -35,7 +36,7 @@ describe("providerCapability", () => {
   });
 
   it("advertises only the driver's own lane when no extra lane is given", async () => {
-    expect(await providerCapability(driver as never).providers()).toEqual([descriptorFor(driver as never)]);
+    expect(await providerCapability(driver as never).providers!()).toEqual([descriptorFor(driver as never)]);
   });
 
   it("advertises the driver's lane first, then every extra lane", async () => {
@@ -79,7 +80,7 @@ describe("providerCapability", () => {
       id: "ir-only",
       label: "IR Only",
       models: {},
-      handleIr: async () => ({ ok: true }),
+      handleIr: async () => emptyIrResponse(),
     };
     expect(providerCapability(irOnlyDriver).id).toBe("ir-only");
   });

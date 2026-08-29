@@ -142,7 +142,7 @@ describe("app registry", () => {
   it("registerApp keeps fields a re-registration does not supply", () => {
     registerApp(alpha, env, home);
     // Valid, because isValid demands id, label and home.candidates, but it declares no loader.
-    const withoutLoader: AppDescriptor = { id: alpha.id, label: "Renamed", home: alpha.home };
+    const withoutLoader: Partial<AppDescriptor> = { id: alpha.id, label: "Renamed", home: alpha.home };
     registerApp(withoutLoader, env, home);
     const stored = getApp("alpha", env, home);
     expect(stored?.label).toBe("Renamed");

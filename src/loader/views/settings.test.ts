@@ -110,16 +110,16 @@ afterEach(() => {
   // whatever runs next.
   if (state.S.renderTimer) { clearTimeout(state.S.renderTimer); state.S.renderTimer = null; }
   state.S.catalogPending = 0;
-  state.S.settingsEntries = null;
-  state.S.settingsSections = null;
+  state.S.settingsEntries = [];
+  state.S.settingsSections = [];
 });
 
 function loadingLabels() {
-  return (state.S.settingsEntries || []).filter((entry) => entry.type === "loading").map((entry) => entry.label);
+  return state.S.settingsEntries.filter((entry) => entry.type === "loading").map((entry) => entry.label);
 }
 
 function sectionsOfKind(kind: string) {
-  return (state.S.settingsEntries || []).filter((entry) => entry.type === "group" && entry.section.kind === kind).map((entry) => entry.section);
+  return state.S.settingsEntries.filter((entry) => entry.type === "group").map((entry) => entry.section).filter((section) => section.kind === kind);
 }
 
 describe("the global section's home", () => {
@@ -179,7 +179,7 @@ describe("refreshSettings", () => {
     try {
       // buildSectionsFromCache resolves the injected global-settings declaration, so a throwing one
       // makes the rebuild inside the read's own callback throw for real.
-      state.S.capabilities = { globalSettings: { get defaults() { throw new Error("no defaults"); } } };
+      state.S.capabilities = { globalSettings: { get defaults(): Record<string, unknown> { throw new Error("no defaults"); } } };
       await vi.waitFor(() => expect(state.S.catalogPending).toBe(0));
       redrawScheduled = state.S.renderTimer;
     } finally {

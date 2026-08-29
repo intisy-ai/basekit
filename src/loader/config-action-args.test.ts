@@ -8,6 +8,7 @@ import { resetPluginHostForTests, runSettingsAction } from "./plugin-surface.js"
 import { PLUGINS_DIR } from "./env.js";
 import { S } from "./state.js";
 import { handleConfigActionArgsData, handleSettingsKey } from "./input.js";
+import type { SettingsRow } from "./settings-model.js";
 
 type Run = { actionId: string; input: Record<string, unknown> | undefined };
 
@@ -60,7 +61,7 @@ function type(text: string) {
 const ENTER = Buffer.from([13]);
 const ESC = Buffer.from([27]);
 
-function openEditor(rows: unknown[]) {
+function openEditor(rows: SettingsRow[]) {
   S.page = "settings";
   S.mode = "pconfig";
   S.configItems = rows;
@@ -71,7 +72,7 @@ function openEditor(rows: unknown[]) {
   S.inputBuf = "";
 }
 
-const CREATE = {
+const CREATE: SettingsRow = {
   kind: "action", key: "profileCreate", label: "Create",
   args: [{ key: "name", type: "string", label: "Profile name" }],
 };

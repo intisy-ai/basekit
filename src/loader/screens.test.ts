@@ -57,8 +57,8 @@ describe("layout depth", () => {
   });
 
   it("terminates on a layout that nests into itself", () => {
-    const cyclic = { kind: "stack", children: [] };
-    cyclic.children.push(cyclic);
+    const cyclic: ScreenNode = { kind: "stack", children: [] };
+    cyclic.children!.push(cyclic);
     expect(flattenScreen(cyclic)).toEqual([]);
   });
 });

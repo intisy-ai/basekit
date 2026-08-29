@@ -5,6 +5,7 @@ import { startPlugins } from "@intisy-ai/api/host";
 import { resetPluginHostForTests } from "./plugin-surface.js";
 import { S } from "./state.js";
 import { buildPlugins } from "./views/plugins.js";
+import { pluginRow } from "./__tests__/fixtures.js";
 
 describe("diagnosticLines", () => {
   it("says so when the host never saw the plugin", () => {
@@ -100,7 +101,7 @@ describe("the diagnostics screen", () => {
     await hostWithBrokenPlugin();
     S.page = "plugins";
     S.mode = "pdiag";
-    S.pluginItems = [{ name: "broken", subject: "", url: "" }];
+    S.pluginItems = [pluginRow({ name: "broken", subject: "", url: "" })];
     S.pcursor = 0;
     // The Installed sub-page is gated on the updater engine being loadable, which it is not here.
     S.hasUpdater = true;

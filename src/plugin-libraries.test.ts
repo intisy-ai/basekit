@@ -17,7 +17,7 @@ import {
 // rmSyncFailure is armed, which lets one test simulate a locked file honestly.
 let rmSyncFailure: Error | null = null;
 vi.mock("node:fs", async () => {
-  const actual = await vi.importActual<typeof import("node:fs")>("node:fs");
+  const actual = await vi.importActual<typeof import("node:fs") & { default: typeof import("node:fs") }>("node:fs");
   const rmSync: typeof actual.rmSync = (path, options) => {
     if (rmSyncFailure) throw rmSyncFailure;
     return actual.rmSync(path, options);

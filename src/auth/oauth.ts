@@ -168,7 +168,7 @@ interface RefreshTokenResult {
  * @throws {TokenRefreshError} if the endpoint refuses the refresh or cannot be reached
  */
 export async function refreshAccessToken(
-  refreshToken: string,
+  refreshToken: string | undefined,
   opts: RefreshAccessTokenOpts,
   transport: ProxiedFetchOpts = {},
 ): Promise<RefreshedToken | undefined> {

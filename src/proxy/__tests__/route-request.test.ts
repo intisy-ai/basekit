@@ -179,12 +179,13 @@ describe("routeRequest", () => {
                 next: async () => {
                   // The typed marker the front door duck-types, since class identity does not
                   // survive an independently bundled provider.
-                  const error: Record<string, unknown> = new Error("rate limited");
-                  error.name = "HandleIrError";
-                  error.status = 429;
-                  error.headers = { "retry-after": "1" };
-                  error.body = "{\"error\":\"limited\"}";
-                  error.retryAfterMs = 1000;
+                  const error = Object.assign(new Error("rate limited"), {
+                    name: "HandleIrError",
+                    status: 429,
+                    headers: { "retry-after": "1" },
+                    body: "{\"error\":\"limited\"}",
+                    retryAfterMs: 1000,
+                  });
                   throw error;
                 },
               }),
@@ -294,12 +295,13 @@ describe("routeRequest", () => {
       },
       resolveHandler: async () => ({
         handleIr: async () => {
-          const error: Record<string, unknown> = new Error("rate limited");
-          error.name = "HandleIrError";
-          error.status = 429;
-          error.headers = { "retry-after": "3", "x-upstream": "yes" };
-          error.body = "upstream said no";
-          error.retryAfterMs = 3000;
+          const error = Object.assign(new Error("rate limited"), {
+            name: "HandleIrError",
+            status: 429,
+            headers: { "retry-after": "3", "x-upstream": "yes" },
+            body: "upstream said no",
+            retryAfterMs: 3000,
+          });
           throw error;
         },
       }) as never,

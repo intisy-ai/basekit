@@ -339,7 +339,7 @@ export function setAppPaths(id: string, names: AppPathNames, env: NodeJS.Process
  * @param home the user home to resolve the registry against.
  * @throws Error when the descriptor is missing any of those three.
  */
-export function registerApp(desc: AppDescriptor, env: NodeJS.ProcessEnv = process.env, home: string = homedir()): void {
+export function registerApp(desc: Partial<AppDescriptor>, env: NodeJS.ProcessEnv = process.env, home: string = homedir()): void {
   const id = desc.id;
   if (!isValid(desc)) throw new Error(`invalid app descriptor: ${id}`);
   const raw = readRaw(env, home);

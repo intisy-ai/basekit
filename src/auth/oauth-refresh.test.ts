@@ -7,7 +7,7 @@ import { refreshAccessToken, TokenRefreshError } from "./oauth.js";
 
 const OAUTH = { tokenUrl: "https://tokens.example/oauth/token", clientId: "client-1", clientSecret: "secret-1" };
 
-type Call = { url: string; init: RequestInit & { proxy?: string } };
+type Call = { url: string; init: Omit<RequestInit, "headers"> & { headers?: Record<string, string>; proxy?: string } };
 
 function transportReturning(...responses: Array<Response | Error>): { calls: Call[]; fetchImpl: typeof fetch } {
   const calls: Call[] = [];

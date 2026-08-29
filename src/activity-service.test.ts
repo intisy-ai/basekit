@@ -19,7 +19,6 @@ describe("createActivityService", () => {
     service.emit({
       topic: "demo.activated",
       action: "activated",
-      actor: "system",
       subject: { kind: "plugin", id: "demo" },
       details: { message: "activated demo" },
     });
