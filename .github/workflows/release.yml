@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  packages: read
   id-token: write
 
 jobs:
@@ -36,6 +37,7 @@ jobs:
     uses: intisy/workflows/.github/workflows/test.yml@main
     with:
       ref: ${{ inputs.tag }}
+      gradle_test: check
 
   readme:
     needs: merge
