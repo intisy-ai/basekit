@@ -3,6 +3,9 @@ import { startPlugins } from "@intisy-ai/api/host";
 import { resetPluginHostForTests } from "../plugin-surface.js";
 import { S } from "../state.js";
 import { buildContributedScreen, collectScreens, refreshScreenSpecs, refreshScreen, runScreenAction, subPages, entryId, resolveScreenAction } from "./screens.js";
+import type { ScreenEntry } from "../screens.js";
+import type { ScreenSpec } from "../../generated/contracts.js";
+import type { ContextSurface } from "@intisy-ai/api/engine";
 
 const spec = { id: "config", label: "Config", layout: { kind: "stack", children: [{ kind: "text", text: "hi" }] } };
 
@@ -15,11 +18,11 @@ function runtime() {
   };
 }
 
-function manifest(id, capabilities) {
+function manifest(id: string, capabilities: string[]) {
   return { id, api: 1, entry: "dist/index.js", capabilities };
 }
 
-async function hostWith(...plugins) {
+async function hostWith(...plugins: Array<{ manifest: ReturnType<typeof manifest>; module: unknown }>) {
   const modules = new Map(plugins.map((plugin) => [`/home/plugin/${plugin.manifest.id}.js`, plugin.module]));
   const loaded = await startPlugins({
     app: "test",
@@ -40,19 +43,19 @@ async function hostWith(...plugins) {
   return loaded;
 }
 
-function screensPlugin(specs) {
+function screensPlugin(specs: unknown[]) {
   return {
     default: {
-      activate: (ctx) => ctx.provide("screens", { screens: () => specs, read: async () => ({ sources: {} }), invoke: async () => ({ ok: true }) }),
+      activate: (ctx: ContextSurface) => ctx.provide("screens", { screens: () => specs, read: async () => ({ sources: {} }), invoke: async () => ({ ok: true }) }),
       deactivate: () => {},
     },
   };
 }
 
-function screensAndSettingsPlugin(specs, actions) {
+function screensAndSettingsPlugin(specs: unknown[], actions: unknown[]) {
   return {
     default: {
-      activate: (ctx) => {
+      activate: (ctx: ContextSurface) => {
         ctx.provide("screens", { screens: () => specs, read: async () => ({ sources: {} }), invoke: async () => ({ ok: true }) });
         ctx.provide("settings", { schema: () => ({ actions }), run: async () => ({ ok: true }) });
       },
@@ -73,7 +76,7 @@ afterEach(() => {
 function unreadableScreenPlugin() {
   return {
     default: {
-      activate: (ctx) => ctx.provide("screens", {
+      activate: (ctx: ContextSurface) => ctx.provide("screens", {
         screens: () => [spec],
         read: async () => { throw new Error("no data here"); },
         invoke: async () => ({ ok: true }),
@@ -83,8 +86,8 @@ function unreadableScreenPlugin() {
   };
 }
 
-function bodyOf(entry) {
-  const body = [];
+function bodyOf(entry: ScreenEntry) {
+  const body: string[] = [];
   buildContributedScreen((line) => body.push(String(line).replace(/\x1b\[[0-9;]*m/g, "")), () => {}, 120, 110, () => {}, entry);
   return body;
 }
@@ -93,7 +96,7 @@ describe("a screen whose data could not be read", () => {
   it("renders as unreadable rather than as forever loading", async () => {
     await hostWith({ manifest: manifest("broken-read", ["screens"]), module: unreadableScreenPlugin() });
     const entry = { plugin: "broken-read", spec, actions: [] };
-    S.settingsSubPage = entryId(entry);
+    S.settingsSubPage = entryId(entry)!;
 
     await refreshScreen(entry);
 
@@ -108,10 +111,10 @@ describe("a screen whose data could not be read", () => {
   it("does not reject when rendering the rows throws, and says so on the screen", async () => {
     // A spec with no layout: the boundary drops one, so only a caller holding a hand-made entry can
     // reach the flattener with it, and that throw must not terminate the loader.
-    const layoutless = { id: "layoutless", label: "Layoutless" };
+    const layoutless = { id: "layoutless", label: "Layoutless" } as unknown as ScreenSpec;
     await hostWith({ manifest: manifest("reader", ["screens"]), module: screensPlugin([layoutless]) });
     const entry = { plugin: "reader", spec: layoutless, actions: [] };
-    S.settingsSubPage = entryId(entry);
+    S.settingsSubPage = entryId(entry)!;
 
     await expect(refreshScreen(entry)).resolves.toBeUndefined();
 
@@ -122,9 +125,9 @@ describe("a screen whose data could not be read", () => {
 describe("runScreenAction", () => {
   it("reports the result to its callback", async () => {
     await hostWith({ manifest: manifest("doer", ["screens"]), module: screensPlugin([spec]) });
-    const seen = [];
+    const seen: unknown[] = [];
 
-    await runScreenAction({ plugin: "doer", spec, actions: [] }, { actionId: "go" }, (answer) => seen.push(answer));
+    await runScreenAction({ plugin: "doer", spec, actions: [] }, { actionId: "go", text: "Go", depth: 0 }, (answer) => seen.push(answer));
 
     expect(seen).toEqual([{ ok: true }]);
   });
@@ -133,7 +136,7 @@ describe("runScreenAction", () => {
     await hostWith({ manifest: manifest("doer", ["screens"]), module: screensPlugin([spec]) });
     let calls = 0;
 
-    await expect(runScreenAction({ plugin: "doer", spec, actions: [] }, { actionId: "go" }, () => {
+    await expect(runScreenAction({ plugin: "doer", spec, actions: [] }, { actionId: "go", text: "Go", depth: 0 }, () => {
       calls++;
       throw new Error("the caller blew up");
     })).resolves.toBeUndefined();
@@ -163,12 +166,12 @@ describe("contributed screens in the loader", () => {
   it("lists Settings first, then one sub-page per screen, in declared order", () => {
     const a = { ...spec, id: "a", label: "Alpha", order: 20 };
     const b = { ...spec, id: "b", label: "Beta", order: 10 };
-    const pages = subPages([{ plugin: "p", spec: a }, { plugin: "p", spec: b }]);
+    const pages = subPages([{ plugin: "p", spec: a, actions: [] }, { plugin: "p", spec: b, actions: [] }]);
     expect(pages.map((page) => page.label)).toEqual(["Settings", "Beta", "Alpha"]);
   });
 
   it("computes the same sub-page id subPages assigns, so a stale refresh can recognize it's no longer active", () => {
-    const entry = { plugin: "p", spec };
+    const entry = { plugin: "p", spec, actions: [] };
     expect(entryId(entry)).toBe("p:config");
     expect(subPages([entry])[1].id).toBe(entryId(entry));
   });
@@ -177,11 +180,11 @@ describe("contributed screens in the loader", () => {
 describe("resolveScreenAction", () => {
   it("resolves a row action id to its declared metadata", () => {
     const action = { id: "restore", label: "Restore", confirm: "Sure?", danger: true };
-    expect(resolveScreenAction({ actions: [action] }, "restore")).toEqual(action);
+    expect(resolveScreenAction({ plugin: "p", spec, actions: [action] }, "restore")).toEqual(action);
   });
 
   it("falls back to the id as the label for a screen-only action the plugin never declared", () => {
-    expect(resolveScreenAction({ actions: [] }, "go")).toEqual({ id: "go", label: "go" });
+    expect(resolveScreenAction({ plugin: "p", spec, actions: [] }, "go")).toEqual({ id: "go", label: "go" });
   });
 });
 

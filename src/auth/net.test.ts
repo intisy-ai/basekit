@@ -20,7 +20,7 @@ describe("proxiedFetch", () => {
 
     expect(proxyManager.selectForAccount).toHaveBeenCalledWith("a1", "p");
     expect(fetchImpl).toHaveBeenCalledTimes(1);
-    expect(fetchImpl.mock.calls[0][1].proxy).toBe("http://proxy");
+    expect(fetchImpl.mock.calls[0][1]!.proxy).toBe("http://proxy");
     expect(proxyManager.reportResult).toHaveBeenCalledWith("http://proxy", true, expect.any(Number));
     expect(result.proxyUsed).toBe(true);
     expect(result.transportFailed).toBe(false);
@@ -124,7 +124,7 @@ describe("timeoutFetch", () => {
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     const [, init] = fetchImpl.mock.calls[0];
-    expect(init.method).toBe("POST");
-    expect(init.signal).toBeInstanceOf(AbortSignal);
+    expect(init!.method).toBe("POST");
+    expect(init!.signal).toBeInstanceOf(AbortSignal);
   });
 });

@@ -61,13 +61,13 @@ describe("appPaths", () => {
   it("falls back to the env override when the app declares nothing", () => {
     const { env, home } = registryWith();
     const withEnv = { ...env, HUB_REPOS_SUBDIR: "clones" };
-    expect(getApp("alpha", withEnv, home)?.paths.repos).toBe("clones");
+    expect(getApp("alpha", withEnv, home)!.paths!.repos).toBe("clones");
   });
 
   it("prefers the app's own declaration over the env override", () => {
     const { env, home } = registryWith({ repos: "declared" });
     const withEnv = { ...env, HUB_REPOS_SUBDIR: "from-env" };
-    expect(getApp("alpha", withEnv, home)?.paths.repos).toBe("declared");
+    expect(getApp("alpha", withEnv, home)!.paths!.repos).toBe("declared");
   });
 
   // These name a directory INSIDE the app home. A separator or a traversal would
@@ -75,7 +75,7 @@ describe("appPaths", () => {
   it("rejects a name that would escape the app home", () => {
     for (const bad of ["../elsewhere", "nested/dir", "back\\slash", "..", ".", "   ", ""]) {
       const { env, home } = registryWith({ repos: bad });
-      expect(getApp("alpha", env, home)?.paths.repos).toBe("repos");
+      expect(getApp("alpha", env, home)!.paths!.repos).toBe("repos");
     }
   });
 

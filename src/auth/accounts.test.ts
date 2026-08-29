@@ -43,7 +43,7 @@ afterEach(() => {
 
 describe("withLock fail-closed", () => {
   it("held lock: updateAccounts throws LockTimeoutError instead of writing unlocked", () => {
-    saveAccounts("p", { accounts: [{ id: "seed" }], activeIndex: 0, activeIndexByLane: {} }, { dir });
+    saveAccounts("p", { accounts: [{ id: "seed", refresh: "r-seed" }], activeIndex: 0, activeIndexByLane: {} }, { dir });
 
     // Simulate another process holding the lock: create the lock file with a FRESH
     // mtime so it isn't reclaimed as stale.
@@ -53,7 +53,7 @@ describe("withLock fail-closed", () => {
 
     try {
       expect(() =>
-        updateAccounts("p", (pool) => { pool.accounts.push({ id: "intruder" }); }, { dir }),
+        updateAccounts("p", (pool) => { pool.accounts.push({ id: "intruder", refresh: "r-intruder" }); }, { dir }),
       ).toThrow(LockTimeoutError);
 
       // fn() must never have run: the on-disk store is untouched.
@@ -72,15 +72,15 @@ describe("withLock fail-closed", () => {
     utimesSync(lockPath, old, old);
 
     expect(() =>
-      updateAccounts("p", (pool) => { pool.accounts.push({ id: "reclaimed" }); }, { dir }),
+      updateAccounts("p", (pool) => { pool.accounts.push({ id: "reclaimed", refresh: "r-reclaimed" }); }, { dir }),
     ).not.toThrow();
     const pool = loadAccounts("p", { dir });
     expect(pool.accounts.map((a: any) => a.id)).toEqual(["reclaimed"]);
   });
 
   it("happy path (lock free) is unchanged: sequential updateAccounts calls both land", () => {
-    updateAccounts("p", (pool) => { pool.accounts.push({ id: "a" }); }, { dir });
-    updateAccounts("p", (pool) => { pool.accounts.push({ id: "b" }); }, { dir });
+    updateAccounts("p", (pool) => { pool.accounts.push({ id: "a", refresh: "r-a" }); }, { dir });
+    updateAccounts("p", (pool) => { pool.accounts.push({ id: "b", refresh: "r-b" }); }, { dir });
     const pool = loadAccounts("p", { dir });
     expect(pool.accounts.map((a: any) => a.id).sort()).toEqual(["a", "b"]);
   });
@@ -111,7 +111,7 @@ describe("cross-thread concurrency", () => {
   // store untouched, never run fn() unlocked and silently write "contender" alongside
   // "seed".
   it("lock held by another thread past LOCK_WAIT_MS: a concurrent updateAccounts throws LockTimeoutError instead of degrading to unlocked", async () => {
-    saveAccounts("lock-test-provider", { accounts: [{ id: "seed" }], activeIndex: 0, activeIndexByLane: {} }, { dir });
+    saveAccounts("lock-test-provider", { accounts: [{ id: "seed", refresh: "r-seed" }], activeIndex: 0, activeIndexByLane: {} }, { dir });
 
     const holdMs = LOCK_WAIT_MS + 2000;
     const holder = new Worker(holdWorkerUrl, { workerData: { dir, holdMs } });
@@ -181,7 +181,7 @@ describe("activity emit", () => {
   it("records a removal only when the account was there", () => {
     const opts = { dir };
     const seen: any[] = [];
-    addAccount("p", { id: "a1", email: "a@b.c" }, opts);
+    addAccount("p", { id: "a1", email: "a@b.c", refresh: "r-a1" }, opts);
     setActivityEmitter((spec: any) => seen.push(spec));
 
     removeAccount("p", "nope", opts);
@@ -193,10 +193,10 @@ describe("activity emit", () => {
   it("re-upserting an object-valued field with the same content in a different key order emits nothing", () => {
     const opts = { dir };
     const seen: any[] = [];
-    addAccount("p", { id: "a1", email: "a@b.c", meta: { a: 1, b: 2 } }, opts);
+    addAccount("p", { id: "a1", email: "a@b.c", refresh: "r-a1", meta: { a: 1, b: 2 } }, opts);
     setActivityEmitter((spec: any) => seen.push(spec));
 
-    addAccount("p", { id: "a1", email: "a@b.c", meta: { b: 2, a: 1 } }, opts);
+    addAccount("p", { id: "a1", email: "a@b.c", refresh: "r-a1", meta: { b: 2, a: 1 } }, opts);
 
     expect(seen).toEqual([]);
   });
@@ -204,10 +204,10 @@ describe("activity emit", () => {
   it("re-upserting an object-valued field with genuinely different content emits one account_updated", () => {
     const opts = { dir };
     const seen: any[] = [];
-    addAccount("p", { id: "a1", email: "a@b.c", meta: { a: 1, b: 2 } }, opts);
+    addAccount("p", { id: "a1", email: "a@b.c", refresh: "r-a1", meta: { a: 1, b: 2 } }, opts);
     setActivityEmitter((spec: any) => seen.push(spec));
 
-    addAccount("p", { id: "a1", email: "a@b.c", meta: { a: 1, b: 3 } }, opts);
+    addAccount("p", { id: "a1", email: "a@b.c", refresh: "r-a1", meta: { a: 1, b: 3 } }, opts);
 
     expect(seen.map((s) => s.action)).toEqual(["account_updated"]);
   });
@@ -215,10 +215,10 @@ describe("activity emit", () => {
   it("same content with reordered keys two levels deep emits nothing", () => {
     const opts = { dir };
     const seen: any[] = [];
-    addAccount("p", { id: "a1", email: "a@b.c", meta: { outer: { a: 1, b: 2 } } }, opts);
+    addAccount("p", { id: "a1", email: "a@b.c", refresh: "r-a1", meta: { outer: { a: 1, b: 2 } } }, opts);
     setActivityEmitter((spec: any) => seen.push(spec));
 
-    addAccount("p", { id: "a1", email: "a@b.c", meta: { outer: { b: 2, a: 1 } } }, opts);
+    addAccount("p", { id: "a1", email: "a@b.c", refresh: "r-a1", meta: { outer: { b: 2, a: 1 } } }, opts);
 
     expect(seen).toEqual([]);
   });
@@ -226,10 +226,10 @@ describe("activity emit", () => {
   it("reordering an array-valued field's elements emits one account_updated (array order is real content)", () => {
     const opts = { dir };
     const seen: any[] = [];
-    addAccount("p", { id: "a1", email: "a@b.c", tags: ["x", "y"] }, opts);
+    addAccount("p", { id: "a1", email: "a@b.c", refresh: "r-a1", meta: { tags: ["x", "y"] } }, opts);
     setActivityEmitter((spec: any) => seen.push(spec));
 
-    addAccount("p", { id: "a1", email: "a@b.c", tags: ["y", "x"] }, opts);
+    addAccount("p", { id: "a1", email: "a@b.c", refresh: "r-a1", meta: { tags: ["y", "x"] } }, opts);
 
     expect(seen.map((s) => s.action)).toEqual(["account_updated"]);
   });
@@ -261,10 +261,10 @@ describe("fidelity of the delegated store", () => {
 
   it("keeps a lane cursor a caller saved", () => {
     const opts = { dir };
-    saveAccounts("cursor-provider", { accounts: [{ id: "a1" }], activeIndex: 1, activeIndexByLane: { fast: 2 } }, opts);
+    saveAccounts("cursor-provider", { accounts: [{ id: "a1", refresh: "r-a1" }], activeIndex: 1, activeIndexByLane: { fast: 2 } }, opts);
 
     expect(loadAccounts("cursor-provider", opts)).toEqual({
-      accounts: [{ id: "a1" }],
+      accounts: [{ id: "a1", refresh: "r-a1" }],
       activeIndex: 1,
       activeIndexByLane: { fast: 2 },
     });

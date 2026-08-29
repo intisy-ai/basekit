@@ -40,19 +40,19 @@ describe("providerCapability", () => {
 
   it("advertises the driver's lane first, then every extra lane", async () => {
     const extra = { id: "gemini-cli", label: "Gemini CLI", accountPool: "stub" };
-    const lanes = await providerCapability(driver as never, [extra]).providers();
+    const lanes = await providerCapability(driver as never, [extra]).providers!();
     expect(lanes.map((lane) => lane.id)).toEqual(["stub", "gemini-cli"]);
   });
 
   it("resolves lanes supplied as a function, so a plugin can answer from live config", async () => {
-    const lanes = await providerCapability(driver as never, () => [{ id: "a", label: "A" }]).providers();
+    const lanes = await providerCapability(driver as never, () => [{ id: "a", label: "A" }]).providers!();
     expect(lanes.map((lane) => lane.id)).toEqual(["stub", "a"]);
   });
 
   it("answers the driver's lane alone when a lane resolver throws", async () => {
     const lanes = await providerCapability(driver as never, () => {
       throw new Error("config unreadable");
-    }).providers();
+    }).providers!();
     expect(lanes.map((lane) => lane.id)).toEqual(["stub"]);
   });
 

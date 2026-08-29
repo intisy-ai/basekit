@@ -50,7 +50,7 @@ describe("ProxyManager scoped selection", () => {
     pm.addManual("http://x", { type: "global" });
     pm.reportRateLimit("http://x", { ipSuspected: false });
     const p = pm.get("http://x");
-    expect(p.stats.ipRateLimitHits || 0).toBe(0);
+    expect(p!.stats.ipRateLimitHits || 0).toBe(0);
   });
 
   it("per-scope mode overrides default", async () => {

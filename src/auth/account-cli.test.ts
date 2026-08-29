@@ -56,7 +56,7 @@ describe("runAccountCli", () => {
 
     expect(handled).toBe(true);
     expect(login).toHaveBeenCalledTimes(1);
-    expect(login.mock.calls[0][0].code).toBe("pasted-code");
+    expect(login.mock.calls[0][0]!.code).toBe("pasted-code");
   });
 
   it("returns false for an unrecognized command", async () => {

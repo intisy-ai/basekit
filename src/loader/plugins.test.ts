@@ -25,12 +25,12 @@ describe("declarationOf", () => {
 
   it("types a row by the plugin's declaration when it made one, so a secret can be masked", () => {
     const declaration = declarationOf("p", "/bundle.js", { fields: [{ key: "token", type: "secret" }] }, values);
-    expect(declaration.items).toEqual([{ key: "token", value: "abc", def: "", isSet: true, type: "secret" }]);
+    expect(declaration!.items).toEqual([{ key: "token", value: "abc", def: "", isSet: true, type: "secret" }]);
   });
 
   it("falls back to the value's own type for a key the plugin declared no field for", () => {
     const declaration = declarationOf("p", "/bundle.js", {}, { defaults: { retries: 3 }, current: {} });
-    expect(declaration.items).toEqual([{ key: "retries", value: 3, def: 3, isSet: false, type: "number" }]);
+    expect(declaration!.items).toEqual([{ key: "retries", value: 3, def: 3, isSet: false, type: "number" }]);
   });
 
   it("carries the declared actions and sections through", () => {
@@ -39,21 +39,21 @@ describe("declarationOf", () => {
       sections: [{ id: "s", label: "S", actions: ["sync"] }],
     };
     const declaration = declarationOf("p", "/bundle.js", schema, { defaults: {}, current: {} });
-    expect(declaration.actions).toEqual([{ id: "sync", label: "Sync now" }]);
-    expect(declaration.sections).toEqual([{ id: "s", label: "S", actions: ["sync"] }]);
+    expect(declaration!.actions).toEqual([{ id: "sync", label: "Sync now" }]);
+    expect(declaration!.sections).toEqual([{ id: "s", label: "S", actions: ["sync"] }]);
   });
 
   it("is a declaration even with no values probed, when the plugin declares an action", () => {
     const declaration = declarationOf("p", null, { actions: [{ id: "go", label: "Go" }] }, null);
-    expect(declaration.items).toEqual([]);
-    expect(declaration.actions).toEqual([{ id: "go", label: "Go" }]);
+    expect(declaration!.items).toEqual([]);
+    expect(declaration!.actions).toEqual([{ id: "go", label: "Go" }]);
   });
 
   it("keeps the plugin's own config name apart from the id surfaces route by", () => {
     const named = declarationOf("plugin-id", null, { actions: [{ id: "go", label: "Go" }] }, { name: "config-name", defaults: {}, current: {} });
-    expect(named.name).toBe("plugin-id");
-    expect(named.configName).toBe("config-name");
-    expect(declarationOf("plugin-id", null, { actions: [{ id: "go", label: "Go" }] }, null).configName).toBeNull();
+    expect(named!.name).toBe("plugin-id");
+    expect(named!.configName).toBe("config-name");
+    expect(declarationOf("plugin-id", null, { actions: [{ id: "go", label: "Go" }] }, null)!.configName).toBeNull();
   });
 });
 
@@ -123,7 +123,7 @@ describe("the declaration cache", () => {
     expect(declarationFor("cache-demo")).toBeUndefined();
 
     const declaration = await readDeclaration("cache-demo");
-    expect(declaration.actions).toEqual([{ id: "go", label: "Go" }]);
+    expect(declaration!.actions).toEqual([{ id: "go", label: "Go" }]);
     expect(declarationFor("cache-demo")).toBe(declaration);
 
     invalidateDeclaration("cache-demo");
@@ -217,9 +217,9 @@ describe("probeConfigValuesAsync against a real bundle", () => {
     await hostWith({ id: "gated", capabilities: ["settings"], module: settingsPlugin({ fields: [{ key: "port", type: "number" }] }), entryPath: bundle });
 
     const declaration = await readDeclaration("gated");
-    expect(declaration.items.map((row: { key: string }) => row.key).sort()).toEqual(["port", "token"]);
-    expect(declaration.items.find((row: { key: string }) => row.key === "port")).toEqual({ key: "port", value: 4000, def: 3000, isSet: true, type: "number" });
-    expect(declaration.configName).toBe("gated-config");
+    expect(declaration!.items.map((row: { key: string }) => row.key).sort()).toEqual(["port", "token"]);
+    expect(declaration!.items.find((row: { key: string }) => row.key === "port")).toEqual({ key: "port", value: 4000, def: 3000, isSet: true, type: "number" });
+    expect(declaration!.configName).toBe("gated-config");
 
     const listedByItsOwnName = getPluginActions({ type: "npm", name: "gated" });
     expect(listedByItsOwnName.map((action: { key: string }) => action.key)).toEqual(["configure", "diagnostics", "update-npm", "uninstall-npm", "cancel"]);
