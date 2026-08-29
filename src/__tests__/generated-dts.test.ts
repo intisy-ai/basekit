@@ -10,7 +10,7 @@ const repo = fileURLToPath(new URL("../..", import.meta.url));
 function emit(module: string, extra: string[] = []): string {
   const scratch = mkdtempSync(join(tmpdir(), "core-dts-"));
   execFileSync(process.execPath, [
-    join(repo, "node_modules", "@intisy-ai", "api", "scripts", "emit-dts.mjs"),
+    join(repo, "node_modules", "@intisy", "bayonet", "scripts", "emit-dts.mjs"),
     "--java-dir", repo,
     "--module", module,
     ...extra,

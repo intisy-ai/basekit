@@ -1,4 +1,4 @@
-import type { PluginLedgerRow } from "@intisy-ai/api/host";
+import type { PluginLedgerRow } from "@intisy/bayonet/host";
 
 function listed(label: string, values: string[]): string[] {
   return values.length ? [label + ": " + values.join(", ")] : [];

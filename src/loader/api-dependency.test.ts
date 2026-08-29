@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { API_VERSION } from "@intisy-ai/api";
+import { API_VERSION } from "@intisy/bayonet";
 
 describe("core-loader depends on the api package", () => {
   // Asserts resolution, not the number. Pinning the value here coupled a resolution check to a

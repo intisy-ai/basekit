@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
-import type { EventBusShape, HomeDescriptorShape, HomeRegistryShape } from "@intisy-ai/api/engine";
-import type { Logger, PluginConfig, PluginPaths } from "@intisy-ai/api";
+import type { EventBusShape, HomeDescriptorShape, HomeRegistryShape } from "@intisy/bayonet/engine";
+import type { Logger, PluginConfig, PluginPaths } from "@intisy/bayonet";
 import { appIdForHome, appPaths, getApp, getApps, resolveHome } from "./apps.js";
 import { publish, subscribeHomes } from "./bus.js";
 import { redactDetails } from "./activity.js";

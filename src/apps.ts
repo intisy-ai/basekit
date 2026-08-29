@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "fs";
 import { isAbsolute, join } from "path";
 import { homedir } from "os";
-import type { AppDescriptor, AppPathNames } from "@intisy-ai/api";
+import type { AppDescriptor, AppPathNames } from "@intisy/bayonet";
 import { atomicWrite, readJson } from "./files.js";
 
 export type { AppDescriptor, AppPathNames };

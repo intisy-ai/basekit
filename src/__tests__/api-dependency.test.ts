@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { API_VERSION } from "@intisy-ai/api";
+import { API_VERSION } from "@intisy/bayonet";
 import { ACTIVITY, LIBRARY_MANAGEMENT, PLUGIN_MANAGEMENT, SETTINGS } from "../generated/contracts.keys.js";
 
 describe("core depends on the api package", () => {

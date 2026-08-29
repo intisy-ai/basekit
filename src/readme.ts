@@ -6,7 +6,7 @@ import { readFileSync, existsSync, writeFileSync } from "fs";
 import { join } from "path";
 import { getConfigDefaults } from "./config.js";
 import { commandsFor } from "./plugin-declarations.js";
-import type { PluginManifest } from "@intisy-ai/api";
+import type { PluginManifest } from "@intisy/bayonet";
 
 /** The plugin settings as the configuration section renders them. */
 export interface ReadmeConfig {

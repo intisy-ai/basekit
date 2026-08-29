@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { setDiagnosticSink } from "@intisy-ai/api/engine";
-import type { ContextSurface, PluginRuntimeShape } from "@intisy-ai/api/engine";
-import type { PluginManifest } from "@intisy-ai/api";
-import { startPlugins } from "@intisy-ai/api/host";
+import { setDiagnosticSink } from "@intisy/bayonet/engine";
+import type { ContextSurface, PluginRuntimeShape } from "@intisy/bayonet/engine";
+import type { PluginManifest } from "@intisy/bayonet";
+import { startPlugins } from "@intisy/bayonet/host";
 
 function runtime(): PluginRuntimeShape {
   return {

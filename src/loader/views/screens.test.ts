@@ -1,11 +1,11 @@
 import { afterEach, describe, it, expect } from "vitest";
-import { startPlugins } from "@intisy-ai/api/host";
+import { startPlugins } from "@intisy/bayonet/host";
 import { resetPluginHostForTests } from "../plugin-surface.js";
 import { S } from "../state.js";
 import { buildContributedScreen, collectScreens, refreshScreenSpecs, refreshScreen, runScreenAction, subPages, entryId, resolveScreenAction } from "./screens.js";
 import type { ScreenEntry } from "../screens.js";
 import type { ScreenSpec } from "../../generated/contracts.js";
-import type { ContextSurface } from "@intisy-ai/api/engine";
+import type { ContextSurface } from "@intisy/bayonet/engine";
 
 const spec = { id: "config", label: "Config", layout: { kind: "stack", children: [{ kind: "text", text: "hi" }] } };
 

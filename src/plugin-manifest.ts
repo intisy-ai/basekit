@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { PluginManifest } from "@intisy-ai/api";
+import type { PluginManifest } from "@intisy/bayonet";
 
 /** Suffixes of the artifacts one deployed plugin owns in a home's plugin directory. */
 export const DEPLOYED_SUFFIXES = [".js", ".json", ".sha"];

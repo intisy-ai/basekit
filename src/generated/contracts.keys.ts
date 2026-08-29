@@ -1,6 +1,6 @@
 // Generated from Java sources. Do not edit.
 
-import type { CapabilityType, ServiceType, TopicType } from "@intisy-ai/api/contract";
+import type { CapabilityType, ServiceType, TopicType } from "@intisy/bayonet/contract";
 import type { AccountRateLimitedEvent, AccountsService, ActivityService, CommandsCapability, ConfigChangedEvent, ConfigHistoryCapability, ConfigProfileChangedEvent, ConfigSnapshotEvent, CrossAppSyncCapability, CustomEndpointsCapability, LibraryManagementCapability, MarketplaceSourceCapability, NotificationEvent, PluginInstalledEvent, PluginManagementCapability, PluginProgressEvent, ProxyStatusEvent, RoutingService, ScreensCapability, SettingsCapability, SyncCompletedEvent } from "./contracts.js";
 
 /** The capability a plugin provides to contribute navigation entries of its own. */

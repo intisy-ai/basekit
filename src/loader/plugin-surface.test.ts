@@ -2,10 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { PluginManifest } from "@intisy-ai/api";
+import type { PluginManifest } from "@intisy/bayonet";
 import { CONFIG_DIR, PLUGINS_DIR } from "./env.js";
 import { getConfigDefaults, SCREENS, SETTINGS } from "../index.js";
-import { startPlugins } from "@intisy-ai/api/host";
+import { startPlugins } from "@intisy/bayonet/host";
 import {
   bundleFor,
   capabilityOf,

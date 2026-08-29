@@ -1,7 +1,7 @@
 // Generated from Java sources. Do not edit.
 
 import type { IrEventStream } from "../event-stream.js";
-import type { Logger, Store } from "@intisy-ai/api/contract";
+import type { Logger, Store } from "@intisy/bayonet/contract";
 
 /**
  * A content block whose `type` discriminator a translator does not recognize (e.g. a

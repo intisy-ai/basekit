@@ -1,4 +1,4 @@
-import { setDiagnosticSink } from "@intisy-ai/api/engine";
+import { setDiagnosticSink } from "@intisy/bayonet/engine";
 import type { ActionResult, CapabilitySchema, SectionSpec } from "./capability-shapes.js";
 import type { ScreenNode, ScreenSpec } from "./screens.js";
 import { APP_ID, PLUGINS_DIR, CONFIG_DIR, tuiLog } from "./env.js";
@@ -7,9 +7,9 @@ import {
   applyManifestDeclarations, createPluginRuntime,
   ACCOUNTS, ACTIVITY, CUSTOM_ENDPOINTS, PLUGIN_MANAGEMENT, ROUTING, SCREENS, SETTINGS,
 } from "../index.js";
-import { callCapability, DEFAULT_CALL_TIMEOUT_MS, DEFAULT_INVOKE_TIMEOUT_MS, ledgerRows, readDeployedManifests, startPlugins } from "@intisy-ai/api/host";
-import type { LoadedHost, PluginLedgerRow } from "@intisy-ai/api/host";
-import type { CapabilityType } from "@intisy-ai/api/contract";
+import { callCapability, DEFAULT_CALL_TIMEOUT_MS, DEFAULT_INVOKE_TIMEOUT_MS, ledgerRows, readDeployedManifests, startPlugins } from "@intisy/bayonet/host";
+import type { LoadedHost, PluginLedgerRow } from "@intisy/bayonet/host";
+import type { CapabilityType } from "@intisy/bayonet/contract";
 
 let HOST: LoadedHost | null = null;
 
