@@ -1,4 +1,4 @@
-import type { PluginManifest } from "@intisy-ai/api";
+import type { PluginManifest } from "@intisy/bayonet";
 import { defineConfig } from "./config.js";
 import { deployCommands } from "./command.js";
 import type { CommandDef } from "./command.js";

@@ -12,7 +12,10 @@ export interface SharedLibrary {
   range: string;
 }
 
-const SCOPE = "@intisy-ai";
+// Every first-party npm scope. More than one because a library that depends on nothing in this
+// ecosystem may live in another org, and a home that did not recognise its scope would leave the
+// library out of the shared store, so a deployed bundle would fail to resolve it at run time.
+const SCOPES = ["@intisy-ai", "@intisy"];
 
 const INSTALL_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -36,7 +39,7 @@ export function sharedStoreDir(configDir: string): string {
  *
  * @remarks
  * Only the DIRECT scoped dependencies, because npm resolves the rest: installing
- * `@intisy-ai/basekit` brings `@intisy-ai/api` along, since basekit declares it. A spec that is not a
+ * `@intisy-ai/basekit` brings `@intisy/bayonet` along, since basekit declares it. A spec that is not a
  * registry range (`file:`, `link:`) is skipped rather than passed on, because it describes a path
  * in the clone and cannot describe an install into a home.
  */
@@ -51,7 +54,7 @@ export function declaredLibraries(sourceDir: string): SharedLibrary[] {
   for (const group of [pkg.dependencies, pkg.peerDependencies]) {
     if (!group || typeof group !== "object") continue;
     for (const [specifier, range] of Object.entries(group as Record<string, unknown>)) {
-      if (!specifier.startsWith(`${SCOPE}/`)) continue;
+      if (!SCOPES.some((scope) => specifier.startsWith(`${scope}/`))) continue;
       if (typeof range !== "string" || range.length === 0) continue;
       if (/^(file|link):/.test(range)) continue;
       if (!libraries.has(specifier)) libraries.set(specifier, range);

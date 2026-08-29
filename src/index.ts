@@ -23,7 +23,7 @@ export { createPluginRuntime } from "./plugin-runtime.js";
 export type { PluginRuntimeParts } from "./plugin-runtime.js";
 export { createActivityService } from "./activity-service.js";
 export type { FieldType, FieldSpec, ActionSpec, SectionSpec, ResolvedSection, DataSpec, CapabilitySchema, NodeStyle, ScreenNode, Column, ItemShape, ScreenSpec } from "./capabilities.types.js";
-export type { PluginContext, PluginManifest } from "@intisy-ai/api";
+export type { PluginContext, PluginManifest } from "@intisy/bayonet";
 // core mints the ecosystem vocabulary it renders, so a plugin that provides a capability needs no
 // submodule of its own for it: the typed keys are object literals behind generated types, so this
 // costs no runtime, and every plugin already carries core.

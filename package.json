@@ -1,6 +1,6 @@
 {
   "name": "basekit",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "description": "The shared foundation of the intisy-ai AI-proxy ecosystem: config, logging and app detection, canonical IR, provider accounts, the routing engine, and the app-loader engine, as one package with a subpath per module.",
   "type": "module",
   "license": "MIT",
@@ -60,15 +60,15 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "emit": "node node_modules/@intisy-ai/api/scripts/emit-dts.mjs --java-dir . --module :contracts --module-dir contracts --out src/generated && node node_modules/@intisy-ai/api/scripts/emit-dts.mjs --java-dir . --module :ir --module-dir ir --out src/ir/generated && node node_modules/@intisy-ai/api/scripts/emit-dts.mjs --java-dir . --module :auth-contracts --module-dir auth-contracts --out src/auth/generated && node node_modules/@intisy-ai/api/scripts/emit-dts.mjs --java-dir . --module :proxy-contracts --module-dir proxy-contracts --out src/proxy/generated",
-    "emit:teavm": "node node_modules/@intisy-ai/api/scripts/emit-dts.mjs --java-dir . --module :core-teavm --out src/generated && node node_modules/@intisy-ai/api/scripts/emit-dts.mjs --java-dir . --module :ir-teavm --out src/ir/generated && node node_modules/@intisy-ai/api/scripts/emit-dts.mjs --java-dir . --module :auth-teavm --out src/auth/generated && node node_modules/@intisy-ai/api/scripts/emit-dts.mjs --java-dir . --module :proxy-teavm --out src/proxy/generated",
-    "build:teavm": "node node_modules/@intisy-ai/api/scripts/teavm-build.mjs --java-dir . --module :core-teavm --out src/generated/core.teavm.js && node node_modules/@intisy-ai/api/scripts/teavm-build.mjs --java-dir . --module :ir-teavm --out src/ir/generated/core-ir.teavm.js && node node_modules/@intisy-ai/api/scripts/teavm-build.mjs --java-dir . --module :auth-teavm --out src/auth/generated/core-auth.teavm.js && node node_modules/@intisy-ai/api/scripts/teavm-build.mjs --java-dir . --module :proxy-teavm --out src/proxy/generated/core-proxy.teavm.js",
-    "build:classlib": "node node_modules/@intisy-ai/api/scripts/teavm-build.mjs --java-dir . --module :classlib --out src/generated/runtime.js",
+    "emit": "node node_modules/@intisy/bayonet/scripts/emit-dts.mjs --java-dir . --module :contracts --module-dir contracts --out src/generated && node node_modules/@intisy/bayonet/scripts/emit-dts.mjs --java-dir . --module :ir --module-dir ir --out src/ir/generated && node node_modules/@intisy/bayonet/scripts/emit-dts.mjs --java-dir . --module :auth-contracts --module-dir auth-contracts --out src/auth/generated && node node_modules/@intisy/bayonet/scripts/emit-dts.mjs --java-dir . --module :proxy-contracts --module-dir proxy-contracts --out src/proxy/generated",
+    "emit:teavm": "node node_modules/@intisy/bayonet/scripts/emit-dts.mjs --java-dir . --module :core-teavm --out src/generated && node node_modules/@intisy/bayonet/scripts/emit-dts.mjs --java-dir . --module :ir-teavm --out src/ir/generated && node node_modules/@intisy/bayonet/scripts/emit-dts.mjs --java-dir . --module :auth-teavm --out src/auth/generated && node node_modules/@intisy/bayonet/scripts/emit-dts.mjs --java-dir . --module :proxy-teavm --out src/proxy/generated",
+    "build:teavm": "node node_modules/@intisy/bayonet/scripts/teavm-build.mjs --java-dir . --module :core-teavm --out src/generated/core.teavm.js && node node_modules/@intisy/bayonet/scripts/teavm-build.mjs --java-dir . --module :ir-teavm --out src/ir/generated/core-ir.teavm.js && node node_modules/@intisy/bayonet/scripts/teavm-build.mjs --java-dir . --module :auth-teavm --out src/auth/generated/core-auth.teavm.js && node node_modules/@intisy/bayonet/scripts/teavm-build.mjs --java-dir . --module :proxy-teavm --out src/proxy/generated/core-proxy.teavm.js",
+    "build:classlib": "node node_modules/@intisy/bayonet/scripts/teavm-build.mjs --java-dir . --module :classlib --out src/generated/runtime.js",
     "build": "npm run emit && npm run emit:teavm && npm run build:teavm && npm run build:classlib && tsc && npm run copy:generated && node build.mjs",
     "test": "npm run build && npm run typecheck:tests && vitest run",
     "prepublishOnly": "npm run build",
     "docs": "typedoc",
-    "copy:generated": "node node_modules/@intisy-ai/api/scripts/copy-generated.mjs --src src/generated --out dist/generated && node node_modules/@intisy-ai/api/scripts/copy-generated.mjs --src src/ir/generated --out dist/ir/generated && node node_modules/@intisy-ai/api/scripts/copy-generated.mjs --src src/auth/generated --out dist/auth/generated && node node_modules/@intisy-ai/api/scripts/copy-generated.mjs --src src/proxy/generated --out dist/proxy/generated",
+    "copy:generated": "node node_modules/@intisy/bayonet/scripts/copy-generated.mjs --src src/generated --out dist/generated && node node_modules/@intisy/bayonet/scripts/copy-generated.mjs --src src/ir/generated --out dist/ir/generated && node node_modules/@intisy/bayonet/scripts/copy-generated.mjs --src src/auth/generated --out dist/auth/generated && node node_modules/@intisy/bayonet/scripts/copy-generated.mjs --src src/proxy/generated --out dist/proxy/generated",
     "typecheck:tests": "tsc --noEmit -p tsconfig.test.json"
   },
   "peerDependencies": {
@@ -80,7 +80,7 @@
     }
   },
   "dependencies": {
-    "@intisy-ai/api": "^1.7.0"
+    "@intisy/bayonet": "^1.7.0"
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",

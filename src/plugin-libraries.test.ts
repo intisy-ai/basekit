@@ -71,10 +71,10 @@ function fakeInstaller(): StoreInstaller & { calls: string[] } {
 
 describe("declaredLibraries", () => {
   it("reads the scoped dependencies a clone's package.json declares", () => {
-    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0", "@intisy-ai/api": "^1.0.2" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0", "@intisy/bayonet": "^1.7.0" });
     expect(declaredLibraries(sourceDir)).toEqual([
       { specifier: "@intisy-ai/basekit", range: "^1.1.0" },
-      { specifier: "@intisy-ai/api", range: "^1.0.2" },
+      { specifier: "@intisy/bayonet", range: "^1.7.0" },
     ]);
   });
 
@@ -94,8 +94,8 @@ describe("declaredLibraries", () => {
   });
 
   it("skips a file: spec, which describes a path in the clone and cannot describe a home install", () => {
-    const sourceDir = makeClone({ "@intisy-ai/basekit": "file:basekit", "@intisy-ai/api": "^1.0.2" });
-    expect(declaredLibraries(sourceDir).map((library) => library.specifier)).toEqual(["@intisy-ai/api"]);
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "file:basekit", "@intisy/bayonet": "^1.7.0" });
+    expect(declaredLibraries(sourceDir).map((library) => library.specifier)).toEqual(["@intisy/bayonet"]);
   });
 
   it("returns nothing for a clone that declares no libraries", () => {
@@ -269,12 +269,12 @@ describe("materializeLibraries", () => {
 
 describe("dropLibrary", () => {
   it("removes the entry and re-runs the install so npm prunes it", () => {
-    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0", "@intisy-ai/api": "^1.0.2" });
+    const sourceDir = makeClone({ "@intisy-ai/basekit": "^1.1.0", "@intisy/bayonet": "^1.7.0" });
     const home = homeFor(sourceDir);
     const install = fakeInstaller();
     materializeLibraries(sourceDir, home, () => {}, install);
 
-    expect(dropLibrary("@intisy-ai/api", home, () => {}, install)).toBe(true);
+    expect(dropLibrary("@intisy/bayonet", home, () => {}, install)).toBe(true);
 
     const manifest = JSON.parse(readFileSync(join(home, "package.json"), "utf8")) as { dependencies: Record<string, string> };
     expect(Object.keys(manifest.dependencies)).toEqual(["@intisy-ai/basekit"]);

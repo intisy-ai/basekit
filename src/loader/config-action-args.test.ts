@@ -3,7 +3,7 @@
 // action ran with nothing collected, so a plugin asked to create a profile got no name.
 import { afterEach, describe, expect, it } from "vitest";
 import { join } from "node:path";
-import { startPlugins } from "@intisy-ai/api/host";
+import { startPlugins } from "@intisy/bayonet/host";
 import { resetPluginHostForTests, runSettingsAction } from "./plugin-surface.js";
 import { PLUGINS_DIR } from "./env.js";
 import { S } from "./state.js";
