@@ -1,11 +1,6 @@
-// Generic loader-proxy daemon runner, shared by every app-proxy-bearing loader
-// (claude-code-loader today; opencode-loader's opt-in path later). Lifts the
-// config-dir resolution, logging, start-marker and listen scaffolding common to
-// every loader's own src/proxy.ts entry point. The caller
-// injects its OWN createProxyServer/makeDynamicResolver (from its app-proxy,
-// e.g. claude-code-proxy or opencode-proxy) and RoutingProfile -- core-loader
-// must never import an app-proxy or core-proxy directly (core-libs-stay-generic
-// rule), it only owns the provider-discovery half (readDeployedProviders).
+// The caller injects its own createProxyServer, makeDynamicResolver and profile because this module
+// is layer 3 and an app-proxy is layer 4: it may never reference one. It owns the provider-discovery
+// half only.
 import { existsSync, mkdirSync, writeFileSync, appendFileSync } from "fs";
 import { join } from "path";
 import { readDeployedProviders } from "./loader-runtime.js";
@@ -27,16 +22,12 @@ export type ProxyServerLike = {
   close?: () => Promise<void>;
 };
 
-// Generic activity spec mirroring core's Activity convention, kept structurally
-// typed here (no import from core) so core-loader stays dependency-free; the
-// host loader injects an emitActivity backed by core's real emitEvent.
-
 /**
  * TProfile is left generic (not imported from core-proxy) so this module never
  * depends on an app-proxy's RoutingProfile type; callers pass their own profile
  * value and its shape is opaque here.
  */
-export type StartLoaderProxyOptions<TProfile = unknown, THandler = unknown, TActivity = ActivitySpec> = {
+export type StartLoaderProxyOptions<TProfile = unknown, THandler = unknown> = {
   /** Builds the server itself, from the caller's own app-proxy. */
   createProxyServer: (opts: {
     /** The home the proxy serves. */
@@ -52,7 +43,7 @@ export type StartLoaderProxyOptions<TProfile = unknown, THandler = unknown, TAct
     /** Delivers a user-facing message through the host's own channel. */
     notify?: (message: string, level?: string) => void;
     /** Records one activity through the host's own pipeline. */
-    emitActivity?: (spec: TActivity | ActivitySpec) => void;
+    emitActivity?: (spec: ActivitySpec) => void;
   }) => ProxyServerLike;
   /** Builds the handler resolver, from the same app-proxy. */
   makeDynamicResolver: (listProviders: () => ProxyHandlerEntry[]) => (providerName: string) => Promise<THandler>;
@@ -75,16 +66,8 @@ export type StartLoaderProxyOptions<TProfile = unknown, THandler = unknown, TAct
    * Left undefined by default, so the proxy falls back to its own notification append.
    */
   notify?: (message: string, level?: string) => void;
-  /**
-   * Routes the proxy's activity to the host's own pipeline. Never required.
-   *
-   * @remarks
-   * `TActivity` is the SERVER's own event shape, not this library's: an app-proxy may describe an
-   * event more loosely than the host records it, and the host is the adapter between the two. It
-   * defaults to the strict shape, so a caller that shares it declares nothing extra. The union is
-   * what lets this runner emit its OWN lifecycle events through the same emitter.
-   */
-  emitActivity?: (spec: TActivity | ActivitySpec) => void;
+  /** Routes the proxy's activity, and this runner's own lifecycle events, to the host's pipeline. */
+  emitActivity?: (spec: ActivitySpec) => void;
 };
 
 
@@ -133,13 +116,12 @@ function stampStartMarker(configDir: string) {
 
 /**
  * Starts an app's loader-proxy daemon: builds the dynamic provider resolver off
- * core-loader's own readDeployedProviders, spins up the injected proxy server,
- * and stamps the start-marker once listening. Each app's src/proxy.ts becomes a
- * thin entry point that just supplies createProxyServer/makeDynamicResolver
- * (from its own app-proxy) + profile + port.
+ * {@link readDeployedProviders}, spins up the injected proxy server, and stamps the start-marker
+ * once listening. Each app's `src/proxy.ts` is then a thin entry point supplying only
+ * `createProxyServer`, `makeDynamicResolver`, profile and port.
  */
-export function startLoaderProxy<TProfile = unknown, THandler = unknown, TActivity = ActivitySpec>(
-  options: StartLoaderProxyOptions<TProfile, THandler, TActivity>,
+export function startLoaderProxy<TProfile = unknown, THandler = unknown>(
+  options: StartLoaderProxyOptions<TProfile, THandler>,
 ): Promise<StartedLoaderProxy> {
   const { createProxyServer, makeDynamicResolver, profile, configDir, port } = options;
   const log = options.log || makeDefaultLog(configDir);
