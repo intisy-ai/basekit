@@ -1,0 +1,48 @@
+// Provider handler modules are loaded dynamically from disk. A long-lived proxy process caches ESM
+// imports by URL, so without an mtime cache-bust a provider update would never take effect until the
+// process restarts. Cache per provider path; re-import only when the file's mtime moves.
+
+import { existsSync, statSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+import type { HandlerResolver, ProxyHandler } from "./types.js";
+
+type HandlerCacheEntry = { path: string; mtime: number; mod: unknown };
+
+/**
+ * Builds a resolver that imports each provider's handler module from disk.
+ *
+ * @param listProviders the installed providers and where their handler modules live, read fresh
+ * @returns a resolver returning null for a provider with no handler, and for a module exporting
+ * neither `handle` nor `handleIr`
+ */
+export function makeDynamicResolver(
+  listProviders: () => { provider: string; handlerPath: string }[]
+): HandlerResolver {
+  const handlerCache: Record<string, HandlerCacheEntry> = {};
+
+  return async function resolve(providerName: string): Promise<ProxyHandler | null> {
+    const match = listProviders().find((p) => p.provider === providerName);
+    if (!match || !existsSync(match.handlerPath)) return null;
+    const path = match.handlerPath;
+
+    let mtime = 0;
+    try {
+      mtime = statSync(path).mtimeMs;
+    } catch {}
+
+    const cached = handlerCache[providerName];
+    let mod: unknown;
+    if (cached && cached.path === path && cached.mtime === mtime) {
+      mod = cached.mod;
+    } else {
+      mod = await import(pathToFileURL(path).href + "?v=" + mtime);
+      handlerCache[providerName] = { path, mtime, mod };
+    }
+
+    const m = mod as { handle?: unknown; handleIr?: unknown };
+    const out: ProxyHandler = {};
+    if (typeof m.handle === "function") out.handle = m.handle as ProxyHandler["handle"];
+    if (typeof m.handleIr === "function") out.handleIr = m.handleIr as ProxyHandler["handleIr"];
+    return out.handle || out.handleIr ? out : null;
+  };
+}
