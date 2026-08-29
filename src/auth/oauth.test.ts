@@ -1,6 +1,7 @@
 import { beforeAll, describe, it, expect } from "vitest";
 import { initCoreAuth } from "./core-auth-loader.js";
 import { accessTokenExpired, calculateTokenExpiry, encodeState, decodeState } from "./oauth.js";
+import type { CoreAccount } from "./types.js";
 
 describe("accessTokenExpired", () => {
   beforeAll(async () => {
@@ -37,7 +38,9 @@ describe("accessTokenExpired", () => {
   });
 
   it("is true when expires is not a number", () => {
-    expect(accessTokenExpired({ access: "tok", expires: "not-a-number" })).toBe(true);
+    // A hand-edited or migrated store can hold anything, which is the case this predicate guards.
+    const malformed = { access: "tok", expires: "not-a-number" } as unknown as CoreAccount;
+    expect(accessTokenExpired(malformed)).toBe(true);
   });
 
   it("is true for a null/undefined auth object", () => {

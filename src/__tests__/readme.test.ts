@@ -80,19 +80,19 @@ describe("renderConfig uses pluginName not pkg.name for the config path", () => 
 });
 
 describe("section renderers", () => {
-  const byId = (id) => DEFAULT_SECTIONS.find((s) => s.id === id);
+  const byId = (id: string) => DEFAULT_SECTIONS.find((s) => s.id === id);
   it("title includes name + badges", () => {
-    expect(byId("title").render(ctxFixture())).toContain("# demo");
-    expect(byId("title").render(ctxFixture())).toContain("img.shields.io");
+    expect(byId("title")!.render(ctxFixture())).toContain("# demo");
+    expect(byId("title")!.render(ctxFixture())).toContain("img.shields.io");
   });
   it("configuration renders a JSON example from config defaults", () => {
-    const out = byId("configuration").render(ctxFixture());
+    const out = byId("configuration")!.render(ctxFixture());
     expect(out).toContain("## Configuration");
     expect(out).toContain('"port": 3456');
   });
   it("commands section is null when there are no commands", () => {
     const c = ctxFixture({ commands: [] });
-    expect(byId("commands").render(c)).toBeNull();
+    expect(byId("commands")!.render(c)).toBeNull();
   });
   it("registerSection inserts after a given id", () => {
     registerSection({ id: "extra-test", render: () => "## Extra\n\nx" }, "configuration");

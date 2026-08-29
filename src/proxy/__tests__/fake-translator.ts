@@ -1,4 +1,4 @@
-import type { IrRequest, IrResponse, IrStreamEvent, VendorHandles, VendorTranslator } from "../../ir/index.js";
+import type { IrRequest, IrResponse, IrStreamEvent, VendorHandles, VendorTranslator, WithVendorHandles } from "../../ir/index.js";
 
 /**
  * A deterministic {@link VendorTranslator} for exercising core-proxy's own codec/routing logic
@@ -6,7 +6,7 @@ import type { IrRequest, IrResponse, IrStreamEvent, VendorHandles, VendorTransla
  * real TransformStreams so the streaming path is genuinely piped rather than stubbed away. Round-tripping
  * an actual vendor's wire syntax is that vendor's own `*-translator` repo's job, not core-proxy's.
  */
-export function makeFakeTranslator(): VendorTranslator {
+export function makeFakeTranslator(): VendorTranslator & WithVendorHandles {
   return {
     async decodeRequest(wireJson: string): Promise<IrRequest> {
       return JSON.parse(wireJson);

@@ -89,7 +89,7 @@ describe("reportRateLimit: acquire -> rate-limit -> rotate -> recover", () => {
     const mgr = manager({ selection: "sticky" });
 
     const first = await mgr.acquire(lane);
-    expect(first.account.id).toBe("a");
+    expect(first!.account!.id).toBe("a");
 
     // Long enough that the assertions inside the window cannot outrun it: the suite runs every
     // module's files in one process, so a short wall-clock window flaps under that load.
@@ -100,7 +100,7 @@ describe("reportRateLimit: acquire -> rate-limit -> rotate -> recover", () => {
     expect(storedPool().accounts.find((x: any) => x.id === "a").rateLimitResetTimes.chat).toBe(resetAt);
 
     const second = await mgr.acquire(lane);
-    expect(second.account.id).toBe("b");
+    expect(second!.account!.id).toBe("b");
 
     // manually move the lane cursor back onto "a" to isolate the recovery check from
     // sticky/round-robin rotation mechanics (already covered by selection.test.ts) -- this
@@ -111,7 +111,7 @@ describe("reportRateLimit: acquire -> rate-limit -> rotate -> recover", () => {
 
     await sleep(2200);
     const third = await mgr.acquire(lane);
-    expect(third.account.id).toBe("a");
+    expect(third!.account!.id).toBe("a");
   });
 });
 
@@ -130,12 +130,12 @@ describe("reportError -> reportSuccess: cooldown lifecycle", () => {
     // than any slack worth hard-coding.
     const after = Date.now();
     const a = mgr.list().find((x) => x.id === "a");
-    expect(a.coolingDownUntil).toBeGreaterThan(before + 1000);
-    expect(a.coolingDownUntil).toBeLessThanOrEqual(after + 7000);
-    expect(a.cooldownReason).toBe("boom");
+    expect(a!.coolingDownUntil).toBeGreaterThan(before + 1000);
+    expect(a!.coolingDownUntil).toBeLessThanOrEqual(after + 7000);
+    expect(a!.cooldownReason).toBe("boom");
 
     const claimed = await mgr.acquire(lane);
-    expect(claimed.account.id).toBe("b");
+    expect(claimed!.account!.id).toBe("b");
   });
 
   it("reportSuccess clears coolingDownUntil/cooldownReason and bumps lastUsed, restoring availability", async () => {
@@ -145,15 +145,15 @@ describe("reportError -> reportSuccess: cooldown lifecycle", () => {
 
     mgr.reportSuccess("a");
     const a = mgr.list().find((x) => x.id === "a");
-    expect(a.coolingDownUntil).toBe(0);
+    expect(a!.coolingDownUntil).toBe(0);
     // AccountStore's wire format omits null fields entirely (rather than persisting an explicit
     // null), so a cleared cooldownReason reads back as undefined, not null -- harmless, since
     // the field is typed `string | null` (both falsy) and no consumer does a strict null check.
-    expect(a.cooldownReason).toBeFalsy();
-    expect(a.lastUsed).toBeGreaterThan(0);
+    expect(a!.cooldownReason).toBeFalsy();
+    expect(a!.lastUsed).toBeGreaterThan(0);
 
     const claimed = await mgr.acquire(lane);
-    expect(claimed.account.id).toBe("a");
+    expect(claimed!.account!.id).toBe("a");
   });
 
   it("falls back to AccountManager's default 1s/5min backoff when the driver configured none", async () => {
@@ -162,10 +162,10 @@ describe("reportError -> reportSuccess: cooldown lifecycle", () => {
     const before = Date.now();
     mgr.reportError("a", undefined, 0, undefined); // no known lane: the safe "cools down normally" default
     const a = mgr.list().find((x) => x.id === "a");
-    expect(a.cooldownReason).toBe("transient error");
+    expect(a!.cooldownReason).toBe("transient error");
     // attempt 0, base 1000ms, jittered to somewhere in [500, 1000)ms
-    expect(a.coolingDownUntil).toBeGreaterThanOrEqual(before + 400);
-    expect(a.coolingDownUntil).toBeLessThanOrEqual(before + 1050);
+    expect(a!.coolingDownUntil).toBeGreaterThanOrEqual(before + 400);
+    expect(a!.coolingDownUntil).toBeLessThanOrEqual(before + 1050);
   });
 });
 
@@ -182,12 +182,12 @@ describe("reportError yields to an active provider reset (F4: one owner of usabl
     mgr.reportError("a", lane, 0, "boom"); // same lane as the active reset
 
     const a = mgr.list().find((x) => x.id === "a");
-    expect(a.coolingDownUntil).toBeFalsy(); // core's generic backoff yielded to the provider reset
-    expect(a.rateLimitResetTimes.chat).toBe(resetAt);
+    expect(a!.coolingDownUntil).toBeFalsy(); // core's generic backoff yielded to the provider reset
+    expect(a!.rateLimitResetTimes!.chat).toBe(resetAt);
 
     // gated by exactly the provider reset while it's active
     const duringReset = await mgr.acquire(lane);
-    expect(duringReset.account.id).toBe("b");
+    expect(duringReset!.account!.id).toBe("b");
 
     await sleep(2200);
     const p = storedPool();
@@ -197,7 +197,7 @@ describe("reportError yields to an active provider reset (F4: one owner of usabl
     // available again once the reset passes, not still cooling from a second, independently
     // computed core backoff
     const afterReset = await mgr.acquire(lane);
-    expect(afterReset.account.id).toBe("a");
+    expect(afterReset!.account!.id).toBe("a");
   });
 
   it("cross lane: an unrelated lane's active reset does NOT suppress this lane's cooldown (would otherwise hot-loop with zero backoff)", async () => {
@@ -212,10 +212,10 @@ describe("reportError yields to an active provider reset (F4: one owner of usabl
     const a = mgr.list().find((x) => x.id === "a");
     // must still cool down via core's own backoff: an unrelated lane's reset must never make a
     // genuinely erroring lane immediately re-selectable with zero backoff
-    expect(a.coolingDownUntil).toBeGreaterThan(before);
-    expect(a.coolingDownUntil).toBeLessThanOrEqual(before + 60);
-    expect(a.cooldownReason).toBe("boom");
-    expect(a.rateLimitResetTimes["gemini-pro"]).toBeGreaterThan(before); // untouched by reportError
+    expect(a!.coolingDownUntil).toBeGreaterThan(before);
+    expect(a!.coolingDownUntil).toBeLessThanOrEqual(before + 60);
+    expect(a!.cooldownReason).toBe("boom");
+    expect(a!.rateLimitResetTimes!["gemini-pro"]).toBeGreaterThan(before); // untouched by reportError
   });
 });
 

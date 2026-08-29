@@ -21,7 +21,7 @@ describe("providerSupport", () => {
     const capability = support.capability(driver as never);
 
     expect(capability.id).toBe("stub");
-    expect(await capability.providers()).toEqual([
+    expect(await capability.providers!()).toEqual([
       { id: "stub", label: "Stub", models: { "stub-model": { name: "Stub Default" } }, hasOAuth: false, accountPool: "stub" },
     ]);
   });

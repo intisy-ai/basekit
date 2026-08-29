@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { splitBySections } from "./settings-model.js";
+import type { PluginDeclaration } from "./plugins.js";
 
-const declaration = {
+const declaration: PluginDeclaration = {
+  configName: "demo",
   name: "demo",
   bundle: "/home/plugin/demo.js",
   items: [{ key: "enabled", value: true, def: false, isSet: true, type: "boolean" }],

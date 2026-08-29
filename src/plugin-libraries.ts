@@ -36,7 +36,7 @@ export function sharedStoreDir(configDir: string): string {
  *
  * @remarks
  * Only the DIRECT scoped dependencies, because npm resolves the rest: installing
- * `@intisy-ai/core` brings `@intisy-ai/api` along, since core declares it. A spec that is not a
+ * `@intisy-ai/basekit` brings `@intisy-ai/api` along, since basekit declares it. A spec that is not a
  * registry range (`file:`, `link:`) is skipped rather than passed on, because it describes a path
  * in the clone and cannot describe an install into a home.
  */
@@ -152,7 +152,7 @@ function isInStore(configDir: string, specifier: string): boolean {
  * @remarks
  * The home's `package.json` is the store's manifest, and `npm install` is what fills it. Nothing is
  * copied out of the clone: a clone is a git checkout, and only the registry knows what
- * `@intisy-ai/core@^1.1.0` means. The install is skipped when the manifest already asks for these
+ * `@intisy-ai/basekit@^1.1.0` means. The install is skipped when the manifest already asks for these
  * ranges and every one of them is present, which is the common case on a repeat deploy.
  */
 export function materializeLibraries(

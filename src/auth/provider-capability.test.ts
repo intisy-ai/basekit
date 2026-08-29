@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { descriptorFor, providerCapability } from "./provider-capability.js";
 import type { ProviderDef } from "./types.js";
+import { emptyIrResponse } from "./__tests__/fixtures.js";
 
 const driver = {
   id: "stub",
@@ -35,24 +36,24 @@ describe("providerCapability", () => {
   });
 
   it("advertises only the driver's own lane when no extra lane is given", async () => {
-    expect(await providerCapability(driver as never).providers()).toEqual([descriptorFor(driver as never)]);
+    expect(await providerCapability(driver as never).providers!()).toEqual([descriptorFor(driver as never)]);
   });
 
   it("advertises the driver's lane first, then every extra lane", async () => {
     const extra = { id: "gemini-cli", label: "Gemini CLI", accountPool: "stub" };
-    const lanes = await providerCapability(driver as never, [extra]).providers();
+    const lanes = await providerCapability(driver as never, [extra]).providers!();
     expect(lanes.map((lane) => lane.id)).toEqual(["stub", "gemini-cli"]);
   });
 
   it("resolves lanes supplied as a function, so a plugin can answer from live config", async () => {
-    const lanes = await providerCapability(driver as never, () => [{ id: "a", label: "A" }]).providers();
+    const lanes = await providerCapability(driver as never, () => [{ id: "a", label: "A" }]).providers!();
     expect(lanes.map((lane) => lane.id)).toEqual(["stub", "a"]);
   });
 
   it("answers the driver's lane alone when a lane resolver throws", async () => {
     const lanes = await providerCapability(driver as never, () => {
       throw new Error("config unreadable");
-    }).providers();
+    }).providers!();
     expect(lanes.map((lane) => lane.id)).toEqual(["stub"]);
   });
 
@@ -79,7 +80,7 @@ describe("providerCapability", () => {
       id: "ir-only",
       label: "IR Only",
       models: {},
-      handleIr: async () => ({ ok: true }),
+      handleIr: async () => emptyIrResponse(),
     };
     expect(providerCapability(irOnlyDriver).id).toBe("ir-only");
   });

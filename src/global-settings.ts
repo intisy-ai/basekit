@@ -5,6 +5,7 @@
 import { defineConfig } from "./config.js";
 import { defineCapabilities } from "./capabilities.js";
 import type { FieldSpec } from "./capabilities.types.js";
+import { IMPACTS } from "./activity-impact.js";
 
 const GLOBAL_NAME = "settings";
 
@@ -21,8 +22,6 @@ export const GLOBAL_SETTINGS_DEFAULTS = {
   /** The lowest impact a home records and reads back. */
   activityMinImpact: "info",
 };
-
-const IMPACTS = ["debug", "info", "notice", "warning", "error"];
 
 const RETENTION_HINT = "0 keeps history unlimited. Oldest whole segments are dropped when the log rotates.";
 

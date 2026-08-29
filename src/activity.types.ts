@@ -1,10 +1,9 @@
-// Typed surface for the Activity convention. The runtime (activity.ts) is
+import type { Impact } from "./activity-impact.js";
+
+export type { Impact };
 
 /** Who caused an activity: a person, the machinery itself, or an app acting on its own. */
 export type Actor = "user" | "system" | "app";
-
-/** How much one recorded activity matters, which is what a surface sorts, colours and filters by. */
-export type Impact = "debug" | "info" | "notice" | "warning" | "error";
 
 /** What one activity was about, when it was about one identifiable thing. */
 export interface Subject {

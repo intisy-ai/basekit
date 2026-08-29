@@ -3,6 +3,8 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { isImpact } from "../activity-impact.js";
+import type { ActivitySpec } from "../activity.types.js";
 import type {
   CoreProxyJsHandler,
   CoreProxyJsRouteDeps,
@@ -202,17 +204,19 @@ const ACTIVITY_TOPICS: Record<string, string> = {
   rate_limited: "account.rate_limited",
 };
 
-/** One routing event, already filed under the topic this host chose for it. */
-export type ActivitySpec = {
-  /** Where the host files the event. */
-  topic: string;
-  /** What happened, as the engine names it. */
-  action: string;
-  /** What it cost the request. */
-  impact?: string;
-  /** The event's own payload, whose shape belongs to the event. */
-  details?: unknown;
-};
+/**
+ * Reads one routing event's payload, which crosses the Java seam as a JSON string.
+ *
+ * @param detailsJson the payload as the router serialised it
+ * @returns the payload wrapped for spreading, or null when it is absent or not an object
+ */
+function eventDetails(detailsJson: string): { details: Record<string, unknown> } | null {
+  try {
+    const parsed: unknown = JSON.parse(detailsJson);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return { details: parsed as Record<string, unknown> };
+  } catch {}
+  return null;
+}
 
 /** Everything {@link routeDeps} needs to build the seam object the Java router asks for. */
 export type RouteDepsOptions = {
@@ -269,11 +273,12 @@ export async function routeDeps(opts: RouteDepsOptions): Promise<CoreProxyJsRout
     },
     notify: (message, level) => opts.notify(message, level ?? undefined),
     event: (action, impact, detailsJson) => {
-      let details: unknown;
-      try {
-        details = JSON.parse(detailsJson);
-      } catch {}
-      opts.emitActivity({ topic: ACTIVITY_TOPICS[action] ?? "proxy.status", action, impact, details });
+      opts.emitActivity({
+        topic: ACTIVITY_TOPICS[action] ?? "proxy.status",
+        action,
+        ...(isImpact(impact) ? { impact } : {}),
+        ...(eventDetails(detailsJson) ?? {}),
+      });
     },
     nativeRateLimit: async (infoJson) => {
       const info = JSON.parse(infoJson) as {

@@ -1,9 +1,10 @@
-// src/proxy/scopes.test.ts
 import { describe, it, expect } from "vitest";
 import { scopeKey, effectiveMode, resolveChain, candidatesForScope } from "./scopes.js";
+import { proxyStore } from "./__tests__/fixtures.js";
+import type { ProxyStore } from "./store.js";
 
-function store(over = {}) {
-  return { version: 2, modes: { default: "automatic" }, providers: {}, assignments: {}, manualSelection: {}, proxies: [], ...over };
+function store(over: Partial<ProxyStore> = {}): ProxyStore {
+  return proxyStore({ modes: { default: "automatic" }, ...over });
 }
 
 describe("scopes", () => {

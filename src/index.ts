@@ -40,6 +40,7 @@ export type { BusHandler, EventEnvelope, NotificationLevel, TopicPayloads, Known
 export { emitEvent, normalizeActivity, registerActivity, renderActivity, readActivity, setActivityEnabled } from "./activity.js";
 export type { ActivityReadPage, TopicRegistration, UnrenderedRecord } from "./activity.js";
 export type { Actor, Impact, Subject, ActivitySpec, ActivityRecord, ActivityQuery, ActivityHomeStats, ActivityStats } from "./activity.types.js";
+export { IMPACTS, isImpact } from "./activity-impact.js";
 export { activityStats } from "./activity-stats.js";
 export { setActivityContext, getActivityContext, resetActivityContext, withCause, currentCause, activityEnv } from "./activity-context.js";
 export type { ActivityContext } from "./activity-context.js";

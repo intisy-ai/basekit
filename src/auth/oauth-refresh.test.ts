@@ -7,7 +7,7 @@ import { refreshAccessToken, TokenRefreshError } from "./oauth.js";
 
 const OAUTH = { tokenUrl: "https://tokens.example/oauth/token", clientId: "client-1", clientSecret: "secret-1" };
 
-type Call = { url: string; init: RequestInit & { proxy?: string } };
+type Call = { url: string; init: Omit<RequestInit, "headers"> & { headers?: Record<string, string>; proxy?: string } };
 
 function transportReturning(...responses: Array<Response | Error>): { calls: Call[]; fetchImpl: typeof fetch } {
   const calls: Call[] = [];
@@ -37,15 +37,15 @@ describe("refreshAccessToken over the Java refresh", () => {
 
     const result = await refreshAccessToken("old-refresh", OAUTH, { fetchImpl });
 
-    expect(result.access).toBe("new-access");
-    expect(result.refresh).toBe("new-refresh");
-    expect(result.expires).toBeGreaterThanOrEqual(before + 1800 * 1000);
-    expect(result.expires).toBeLessThanOrEqual(Date.now() + 1800 * 1000);
+    expect(result!.access).toBe("new-access");
+    expect(result!.refresh).toBe("new-refresh");
+    expect(result!.expires).toBeGreaterThanOrEqual(before + 1800 * 1000);
+    expect(result!.expires).toBeLessThanOrEqual(Date.now() + 1800 * 1000);
 
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toBe(OAUTH.tokenUrl);
     expect(calls[0].init.method).toBe("POST");
-    expect(calls[0].init.headers["content-type"]).toBe("application/x-www-form-urlencoded");
+    expect(calls[0].init.headers!["content-type"]).toBe("application/x-www-form-urlencoded");
     const body = new URLSearchParams(calls[0].init.body as string);
     expect(body.get("grant_type")).toBe("refresh_token");
     expect(body.get("refresh_token")).toBe("old-refresh");
@@ -66,7 +66,7 @@ describe("refreshAccessToken over the Java refresh", () => {
 
     const result = await refreshAccessToken("keep-me", OAUTH, { fetchImpl });
 
-    expect(result.refresh).toBe("keep-me");
+    expect(result!.refresh).toBe("keep-me");
   });
 
   it("defaults to a one-hour expiry when the endpoint reports no expires_in", async () => {
@@ -75,7 +75,7 @@ describe("refreshAccessToken over the Java refresh", () => {
 
     const result = await refreshAccessToken("r", OAUTH, { fetchImpl });
 
-    expect(result.expires).toBeGreaterThanOrEqual(before + 3600 * 1000);
+    expect(result!.expires).toBeGreaterThanOrEqual(before + 3600 * 1000);
   });
 
   it("reports an invalid_grant refusal as revoked, which is what disables the account", async () => {
@@ -122,7 +122,7 @@ describe("refreshAccessToken over the Java refresh", () => {
 
     const result = await refreshAccessToken("r", { ...OAUTH, proxy: "http://127.0.0.1:9" }, { fetchImpl });
 
-    expect(result.access).toBe("direct");
+    expect(result!.access).toBe("direct");
     expect(calls).toHaveLength(2);
     expect(calls[0].init.proxy).toBe("http://127.0.0.1:9");
     expect(calls[1].init.proxy).toBeUndefined();

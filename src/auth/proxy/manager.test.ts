@@ -1,10 +1,9 @@
-// src/proxy/manager.test.ts
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdtempSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-let dir;
+let dir: string;
 beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), "proxytest-"));
   vi.stubEnv("HUB_CONFIG_DIR", dir);
@@ -50,7 +49,7 @@ describe("ProxyManager scoped selection", () => {
     pm.addManual("http://x", { type: "global" });
     pm.reportRateLimit("http://x", { ipSuspected: false });
     const p = pm.get("http://x");
-    expect(p.stats.ipRateLimitHits || 0).toBe(0);
+    expect(p!.stats.ipRateLimitHits || 0).toBe(0);
   });
 
   it("per-scope mode overrides default", async () => {
