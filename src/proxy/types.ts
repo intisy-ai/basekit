@@ -3,6 +3,8 @@
 // constructs a translator instance (a profile or a test) pulls in the real module.
 import type { IrRequest, IrResponse, IrStreamEvent, VendorTranslator, WithVendorHandles } from "../ir/index.js";
 export type { IrRequest, IrResponse, IrStreamEvent, VendorTranslator, WithVendorHandles } from "../ir/index.js";
+import type { ActivitySpec } from "../activity.types.js";
+export type { ActivitySpec };
 
 /** The per-request runtime the router hands a handler. */
 export type HandlerCtx = {
@@ -207,7 +209,7 @@ export type ProxyOptions = {
   /** Where user-visible notices go. */
   notify?: (m: string, level?: string) => void;
   /** Where routing events are recorded, alongside the message `notify` shows. */
-  emitActivity?: (spec: { topic: string; action: string; actor?: string; impact?: string; subject?: any; details?: any }) => void;
+  emitActivity?: (spec: ActivitySpec) => void;
 };
 
 /** A proxy that has been built but not necessarily started. */
