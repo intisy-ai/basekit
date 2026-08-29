@@ -8,6 +8,7 @@ import { initCoreProxy, getCoreProxy } from "./core-proxy-loader.js";
 import { catalogEntries } from "./model-map.js";
 import { profileJson, requestJson, routeDeps, type RoutedResult } from "./java-route.js";
 import type { ProxyOptions, ProxyServer } from "./types.js";
+import type { ActivitySpec } from "../activity.types.js";
 /**
  * Builds the always-on inbound proxy daemon.
  *
@@ -39,7 +40,7 @@ export function createProxyServer(opts: ProxyOptions): ProxyServer {
 
   // Best-effort Activity emit alongside notify, for hosts that inject an Activity emitter instead
   // of (or in addition to) a plain notification string. Never breaks the request path.
-  const emitActivity = (spec: { topic: string; action: string; actor?: string; impact?: string; subject?: any; details?: any }) => {
+  const emitActivity = (spec: ActivitySpec) => {
     try { opts.emitActivity?.(spec); } catch {}
   };
 
