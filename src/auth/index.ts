@@ -74,6 +74,7 @@ export { isTTY } from "./ui/ansi.js";
 export { proxyManager, ProxyManager } from "./proxy/manager.js";
 export type { ScoredProxyEntry, ReportRateLimitOpts, ProxyEntry, ProxyScope, ProxyStore, ProxyStats } from "./proxy/manager.js";
 export { proxiedFetch, timeoutFetch } from "./net.js";
+export type { ProxiedInit } from "./net.js";
 export type { ProxyManagerLike, ProxiedFetchOpts, ProxiedFetchResult } from "./net.js";
 export { qualityLabel, isIpLimited, IP_LIMIT_COOLDOWN_MS, MAX_ACCOUNTS_PER_PROXY } from "./proxy/scoring.js";
 export { scopeKey, parseScopeKey, effectiveMode, resolveChain, proxiesInScope, candidatesForScope } from "./proxy/scopes.js";

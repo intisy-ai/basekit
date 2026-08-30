@@ -24,8 +24,11 @@ const PROBE = "__contract_probe__";
 
 /** Temporary app homes a test runs against, so it never touches the real ones. */
 export interface IsolatedHomes {
+  /** The temporary OpenCode home. */
   opencode: string;
+  /** The temporary Claude home. */
   claude: string;
+  /** Restores the environment the real homes resolve from, and removes the temporary ones. */
   cleanup: () => void;
 }
 
@@ -83,14 +86,29 @@ function runNode(args: string[]): string {
 
 /** What one plugin tells the shared contract test about itself. */
 export interface PluginContractSpec {
-  name: string;                 // describe() label
-  entry: string;                // bundle run as `node <entry> config …` (the config CLI + load)
-  configName: string;           // config/<configName>.json the CLI writes
-  app?: "opencode" | "claude" | "both";  // which command dir(s) to expect (default "both")
-  commands?: string[];          // slash-command names (no .md) that must deploy
-  deploy?: "load" | { module: string; fn: string; arg?: "opencode" | "claude" | "none" };
-  actions?: string[][];         // extra argv arrays run against entry; each must exit 0
-  readme?: boolean;             // when true, asserts `node <entry> readme --check` exits 0
+  /** The plugin's name, used as the `describe()` label. */
+  name: string;
+  /** The bundle to run, as `node <entry> config …`, which exercises the config CLI and the load. */
+  entry: string;
+  /** The `config/<configName>.json` the CLI writes. */
+  configName: string;
+  /** Which app's command directories to expect. Defaults to both. */
+  app?: "opencode" | "claude" | "both";
+  /** Slash-command names, without `.md`, that must deploy. */
+  commands?: string[];
+  /** How the plugin deploys: on load, or through an exported function. */
+  deploy?: "load" | {
+    /** The module the deploy function is exported from. */
+    module: string;
+    /** The exported function's name. */
+    fn: string;
+    /** The app id to pass it, or none. */
+    arg?: "opencode" | "claude" | "none";
+  };
+  /** Extra argv arrays run against `entry`; each must exit 0. */
+  actions?: string[][];
+  /** When true, asserts `node <entry> readme --check` exits 0. */
+  readme?: boolean;
 }
 
 function commandDirs(app: string, homes: IsolatedHomes): Array<[string, string]> {

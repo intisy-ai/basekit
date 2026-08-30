@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { join } from "node:path";
 import { isImpact } from "../activity-impact.js";
 import type { ActivitySpec } from "../activity.types.js";
+import type { Logger } from "@intisy/bayonet/contract";
 import type {
   CoreProxyJsHandler,
   CoreProxyJsRouteDeps,
@@ -94,6 +95,22 @@ export async function requestJson(request: Request): Promise<string> {
   return JSON.stringify({ method: request.method, url: url.pathname + url.search, headers, body });
 }
 
+/**
+ * One line-oriented sink, presented as the `Logger` a handler context declares.
+ *
+ * @remarks
+ * The router's own diagnostics are a single function here, and every level lands on it. A host with
+ * real levels supplies its own logger instead of going through this adapter.
+ */
+function loggerOf(log: (message: string) => void): Logger {
+  return {
+    debug: log,
+    info: log,
+    warn: log,
+    error: log,
+  };
+}
+
 type TsHandler = {
   handle?: ProxyHandler["handle"];
   handleIr?: (ir: IrRequest, ctx: HandlerCtx) => Promise<IrResponse | IrEventStream>;
@@ -113,13 +130,18 @@ export function handlerAdapter(
   wantsStream: boolean,
 ): CoreProxyJsHandler | null {
   const out: CoreProxyJsHandler = {};
+  // Every field is the one `HandlerCtx` declares. It used to build a shape of its own, with the
+  // resolved id under `provider` and a bare function where a `Logger` belongs, because this package
+  // carried a second, hand-written `HandlerCtx` beside the one the ir package emits from the Java.
+  // A handler reading `ctx.handlerId` therefore saw nothing at all.
   const contextOf = (ctxJson: string): HandlerCtx => {
     const parsed = JSON.parse(ctxJson) as { configDir?: string; model?: string; handlerId?: string };
     return {
       configDir: parsed.configDir || configDir,
-      log,
+      handlerId: parsed.handlerId || "",
+      log: loggerOf(log),
       model: parsed.model || "",
-      provider: parsed.handlerId || "",
+      store: null,
     };
   };
 

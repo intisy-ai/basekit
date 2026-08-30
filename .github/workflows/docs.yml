@@ -1,0 +1,19 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  docs:
+    uses: intisy/workflows/.github/workflows/docs.yml@main
+    with:
+      # typedoc reads src/ and the committed .d.ts beside each generated bundle, so the site needs
+      # no build: skipping it keeps Java and Gradle out of a docs run entirely.
+      build: ''

@@ -1,6 +1,6 @@
 {
   "name": "basekit",
-  "version": "4.3.0",
+  "version": "5.0.0",
   "description": "The shared foundation of the intisy-ai AI-proxy ecosystem: config, logging and app detection, canonical IR, provider accounts, the routing engine, and the app-loader engine, as one package with a subpath per module.",
   "type": "module",
   "license": "MIT",
@@ -80,7 +80,7 @@
     }
   },
   "dependencies": {
-    "@intisy/bayonet": "^1.7.0"
+    "@intisy/bayonet": "^1.8.0"
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",

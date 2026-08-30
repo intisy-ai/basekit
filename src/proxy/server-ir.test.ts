@@ -55,7 +55,7 @@ it("decodes app wire -> IR, routes, calls handleIr, and encodes the IrResponse b
         return {
           id: "msg_echo",
           model: ctx.model,
-          content: [{ kind: "text", text: "handled via IR (" + ctx.provider + "): " + userText }],
+          content: [{ kind: "text", text: "handled via IR (" + ctx.handlerId + "): " + userText }],
           stopReason: "end_turn",
           usage: { inputTokens: 5, outputTokens: 5 },
         };

@@ -1,25 +1,10 @@
 // Canonical IR types and the per-vendor translator API, imported type-only so they erase at
 // build time: core-proxy's compiled dist never imports core-ir at runtime; only a caller that
 // constructs a translator instance (a profile or a test) pulls in the real module.
-import type { IrRequest, IrResponse, IrStreamEvent, VendorTranslator, WithVendorHandles } from "../ir/index.js";
-export type { IrRequest, IrResponse, IrStreamEvent, VendorTranslator, WithVendorHandles } from "../ir/index.js";
+import type { HandlerCtx, IrRequest, IrResponse, IrStreamEvent, VendorTranslator, WithVendorHandles } from "../ir/index.js";
+export type { HandlerCtx, IrRequest, IrResponse, IrStreamEvent, VendorTranslator, WithVendorHandles } from "../ir/index.js";
 import type { ActivitySpec } from "../activity.types.js";
 export type { ActivitySpec };
-
-/** The per-request runtime the router hands a handler. */
-export type HandlerCtx = {
-  /** Where the app's configuration and caches live. */
-  configDir: string;
-  /** Where the handler's own diagnostics go. */
-  log: (m: string) => void;
-  /** The upstream model id to call, after any tier or alias rewrite. */
-  model: string;
-  /**
-   * The resolved provider id serving this request. A handler backing several providers
-   * (e.g. a shared account pool with distinct upstream lanes) reads it to pick the lane.
-   */
-  provider: string;
-};
 
 /**
  * A stream of canonical IR events produced directly by a provider's `handleIr`, not vendor SSE

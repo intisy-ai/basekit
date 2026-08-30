@@ -7,14 +7,14 @@ plugins {
 dependencies {
     // Exported rather than compileOnly because HandlerCtx's public fields ARE contract types, so
     // every consumer that reads one needs them resolvable. They are interfaces, so nothing is linked.
-    githubApi "intisy:bayonet:1.7.0:contract"
+    githubApi "intisy:bayonet:1.8.0:contract"
 
     // SOURCE-retention, so the jar carries neither the annotations nor the processor.
-    githubCompileOnly "intisy:bayonet:1.7.0:annotations"
+    githubCompileOnly "intisy:bayonet:1.8.0:annotations"
     // The processor jar is a release asset and so carries no transitive metadata: it needs the
     // annotation types it reads named here too, alongside the compile classpath's own copy.
-    githubAnnotationProcessor "intisy:bayonet:1.7.0:processor"
-    githubAnnotationProcessor "intisy:bayonet:1.7.0:annotations"
+    githubAnnotationProcessor "intisy:bayonet:1.8.0:processor"
+    githubAnnotationProcessor "intisy:bayonet:1.8.0:annotations"
 
     testImplementation testFixtures(project(":ir"))
 }
@@ -23,6 +23,10 @@ tasks.named("compileJava") {
     options.compilerArgs += [
         "-Atsemit.name=ir",
         "-Atsemit.ext=.ts",
-        "-Atsemit.imports=../event-stream.js=IrEventStream;@intisy/bayonet/contract=Logger,Store",
+        // VendorTranslator is the TypeScript face of the Java Translator SPI, and the key minted
+        // below names it. Only a name the emitted text actually mentions is imported, so listing it
+        // adds nothing to the surface file beside the keys one.
+        "-Atsemit.imports=../event-stream.js=IrEventStream;@intisy/bayonet/contract=Logger,Store;../translators.js=VendorTranslator",
+        "-Atsemit.keys=@intisy/bayonet/contract",
     ]
 }

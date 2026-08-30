@@ -15,6 +15,9 @@ public final class AuthContracts {
     @TsConstant(type = "CapabilityType<Provider>", id = "provider")
     public static final Object PROVIDER = null;
 
+    /** The id {@link #PROVIDER} names, for a host that resolves capabilities on the JVM. */
+    public static final String PROVIDER_ID = "provider";
+
     private AuthContracts() {
     }
 }
