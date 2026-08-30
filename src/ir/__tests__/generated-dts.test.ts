@@ -27,7 +27,7 @@ function expectMatchesCommitted(scratch: string, names: string[]): void {
 }
 
 it("keeps the committed ir declarations identical to what the java emits", () => {
-  expectMatchesCommitted(emit(":ir", ["--module-dir", "ir"]), ["ir.ts"]);
+  expectMatchesCommitted(emit(":ir", ["--module-dir", "ir"]), ["ir.keys.ts", "ir.ts"]);
 });
 
 it("leaves no link tag unresolved in the emitted prose", () => {

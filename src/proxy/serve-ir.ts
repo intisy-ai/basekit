@@ -26,7 +26,9 @@ export interface ServeIrOptions {
  * reconstructed upstream response when the handler threw a transport error
  */
 export async function serveIr(request: Request, opts: ServeIrOptions): Promise<Response> {
-  const log = opts.ctx?.log ?? (() => {});
+  // The context's logger has levels; the decode reports one kind of thing, so it takes the warn one.
+  const logger = opts.ctx?.log;
+  const log = logger ? (message: string) => { logger.warn(message); } : () => {};
   const ir = await decodeIr(opts.profile, request, log);
   if (!ir) {
     return new Response(

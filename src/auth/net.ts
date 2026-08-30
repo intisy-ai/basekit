@@ -3,6 +3,16 @@
 // fetch + proxy-retry mechanics; rate-limit status classification stays with the
 // caller (it differs per upstream wire format).
 
+/**
+ * A fetch init this runtime also honours a per-request proxy on.
+ *
+ * @remarks
+ * Named because both fetches here honour the field and a caller that sets it needs a type saying so.
+ * It used to be declared inline on {@link proxiedFetch} and absent from {@link timeoutFetch}, which
+ * left every caller of the latter to write the intersection out itself.
+ */
+export type ProxiedInit = RequestInit & { proxy?: string };
+
 /** The minimal proxy-manager shape {@link proxiedFetch} needs: pick a proxy, report how it went. */
 export interface ProxyManagerLike {
   /** Picks a proxy URL for an account, or `null` for a direct connection. */
@@ -52,7 +62,7 @@ function freshInput(request: Request | string): Request | string {
  */
 export async function proxiedFetch(
   request: Request | string,
-  init: RequestInit & { proxy?: string },
+  init: ProxiedInit,
   opts: ProxiedFetchOpts = {},
 ): Promise<ProxiedFetchResult> {
   const log = opts.log || (() => {});
@@ -93,11 +103,15 @@ export async function proxiedFetch(
 /**
  * Fetches with a hard deadline, aborting the request if `timeoutMs` elapses first.
  *
+ * @param url - what to fetch
+ * @param init - the request init, which may name a proxy this runtime honours
+ * @param timeoutMs - how long to wait before aborting
  * @param fetchImpl test seam only; production callers never pass it (defaults to the global fetch)
+ * @returns the response, or a rejection when the deadline passed first
  */
 export async function timeoutFetch(
   url: string | Request,
-  init: RequestInit = {},
+  init: ProxiedInit = {},
   timeoutMs = 20000,
   fetchImpl: typeof fetch = fetch,
 ): Promise<Response> {

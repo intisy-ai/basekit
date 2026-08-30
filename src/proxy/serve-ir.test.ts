@@ -5,7 +5,14 @@ import type { IrRequest, IrResponse, IrStreamEvent } from "../ir/index.js";
 import { wireBody } from "./__tests__/wire.js";
 
 const profile = { translator: makeFakeTranslator() } as any;
-const ctx = { configDir: "/tmp", log: () => {}, model: "m-ok", provider: "p" } as any;
+const noop = () => {};
+const ctx = {
+  configDir: "/tmp",
+  handlerId: "p",
+  log: { debug: noop, info: noop, warn: noop, error: noop },
+  model: "m-ok",
+  store: null,
+} as any;
 const wire = JSON.stringify({ model: "claude-x", max_tokens: 16, messages: [{ role: "user", content: [{ kind: "text", text: "hi there" }] }] });
 const req = () => new Request("http://x/v1/messages", { method: "POST", body: wire });
 

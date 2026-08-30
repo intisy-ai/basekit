@@ -26,3 +26,4 @@ export * from "./translators.js";
 export * from "./vendor-bridge.js";
 export type * from "./event-stream.js";
 export type * from "./generated/ir.js";
+export { TRANSLATOR } from "./generated/ir.keys.js";
